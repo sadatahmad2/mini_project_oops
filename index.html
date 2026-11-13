@@ -1,0 +1,2759 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VoltEdge | Electricity Bill Generator</title>
+<meta name="description" content="Accurate domestic electricity bill generation at ₹6.00 per unit. Enter consumer units to calculate and generate printable thermal receipts instantly.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --u:min(calc(100vw/1600),calc(100vh/900));
+  --k:1;--k2:1;--dip:0;
+  --ink:color-mix(in srgb,#14202f calc((1 - var(--k))*100%),#fff);
+  --nav:color-mix(in srgb,#1b2736 calc((1 - var(--k))*100%),#eef1f6);
+  --soft:color-mix(in srgb,#1b2736 calc((1 - var(--k))*100%),#dfe5ee);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{height:100%;scroll-behavior:smooth}
+body{min-height:100%;background:#0b1426;font-family:"Instrument Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;overflow-y:auto}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+/* Living Home Background (Farmhouse, Solar Roof, Sky, WebGL Fog) */
+.site-bg-fixed{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;pointer-events:none;overflow:hidden;background:#0b1426}
+.site-bg-fixed .layer,
+.site-bg-fixed .layer img,
+.site-bg-fixed #fog,
+.site-bg-fixed .tilt{position:absolute;inset:0;width:100%;height:100%}
+.site-bg-fixed .layer img{display:block;object-fit:cover;object-position:50% 62%}
+.sky img{filter:blur(calc(7*var(--u)));transform:scale(1.05)}
+#skyN{opacity:var(--k)}
+.home{will-change:transform;transform:translate3d(0,var(--sink,0px),0)}
+.home .set{position:absolute;inset:0;visibility:hidden}
+.home .set.is-on{visibility:visible}
+.ground{-webkit-mask-image:linear-gradient(transparent 54%,#000 64%);mask-image:linear-gradient(transparent 54%,#000 64%)}
+.tilt{position:absolute;inset:0;pointer-events:none;-webkit-backdrop-filter:blur(calc(9*var(--u)));backdrop-filter:blur(calc(9*var(--u)));-webkit-mask-image:linear-gradient(transparent 70%,#000 92%);mask-image:linear-gradient(transparent 70%,#000 92%)}
+#fog{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+
+/* Permanently Fixed Top Navigation Bar */
+.bar{
+  position:fixed;top:0;left:0;right:0;z-index:1000;width:100%;
+  display:flex;align-items:center;padding:calc(18*var(--u)) calc(38*var(--u));
+  color:var(--nav);pointer-events:auto;
+  transition:background .35s ease,backdrop-filter .35s ease,box-shadow .35s ease,border-color .35s ease,padding .3s ease;
+}
+.bar.is-scrolled{
+  background:rgba(11,20,38,.85);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-bottom:1px solid rgba(255,255,255,.1);box-shadow:0 10px 30px rgba(0,0,0,.45);
+  padding-top:calc(12*var(--u));padding-bottom:calc(12*var(--u));
+}
+.logo{display:flex;align-items:center;gap:calc(9*var(--u));font-size:calc(25*var(--u));font-weight:500;letter-spacing:-.025em;color:var(--ink);flex:1 1 0}
+.logo svg{width:calc(38*var(--u));height:calc(38*var(--u));flex:none}
+.links{display:flex;gap:calc(42*var(--u));list-style:none;font-size:calc(16.5*var(--u));font-weight:500;opacity:calc(1 - var(--dip)*.82)}
+
+/* Scrollable Content Container */
+.page-scroll-container{position:relative;z-index:2;width:100%;min-height:100vh}
+.hero-view{position:relative;min-height:100svh;display:flex;flex-direction:column;align-items:center;padding-top:calc(96*var(--u));box-sizing:border-box}
+
+/* Nimbus UI · Liquid Navbar — "Waterline" */
+.nimbus-nav{
+  --n-tint:color-mix(in srgb,rgba(255,255,255,.14) calc((1 - var(--k))*100%),rgba(10,18,40,.32));
+  --n-fg:color-mix(in srgb,#0B132B calc((1 - var(--k))*100%),#F1F7FF);
+  --n-fg-soft:color-mix(in srgb,rgba(11,19,43,.7) calc((1 - var(--k))*100%),rgba(241,247,255,.7));
+  --n-rim:color-mix(in srgb,rgba(255,255,255,.7) calc((1 - var(--k))*100%),rgba(255,255,255,.34));
+  position:relative;display:inline-flex;align-items:center;gap:4px;padding:6px;border-radius:999px;isolation:isolate;
+  font-family:inherit;-webkit-font-smoothing:antialiased;user-select:none;-webkit-tap-highlight-color:transparent;
+  opacity:calc(1 - var(--dip)*.82);transition:opacity .3s ease;
+}
+.nimbus-glass{position:absolute;inset:0;border-radius:inherit;z-index:-2;overflow:hidden;background:var(--n-tint);
+  -webkit-backdrop-filter:blur(12px) saturate(1.2) brightness(1.08);backdrop-filter:blur(12px) saturate(1.2) brightness(1.08);
+  box-shadow:inset 0 1px 1px var(--n-rim),inset 0 0 0 1px rgba(255,255,255,.2),0 12px 32px -14px rgba(0,40,90,.5),0 2px 6px rgba(0,40,90,.1)}
+.nimbus-water{position:absolute;left:-14px;top:-14px;z-index:-1;pointer-events:none}
+.nimbus-nav[data-gl="off"] .nimbus-water{display:none}
+.nimbus-drop{display:none;position:absolute;top:6px;bottom:6px;left:0;border-radius:999px;z-index:-1;pointer-events:none;will-change:transform,width;
+  background:radial-gradient(120% 140% at 30% 0%,rgba(255,255,255,.75),rgba(255,255,255,0) 55%),rgba(255,255,255,.38);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.95),inset 0 -2px 6px rgba(0,162,255,.22),inset 0 0 0 1px rgba(255,255,255,.55),0 6px 16px -6px rgba(0,70,140,.45)}
+.nimbus-nav[data-gl="off"] .nimbus-drop{display:block}
+.nimbus-item{position:relative;z-index:1;display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border:0;border-radius:999px;background:none;color:var(--n-fg-soft);
+  font-family:inherit;font-weight:500;font-size:14px;line-height:1;letter-spacing:-.01em;text-decoration:none;cursor:pointer;transition:color .25s;outline:none}
+.nimbus-item:hover,.nimbus-item[aria-current="page"]{color:var(--n-fg)}
+.nimbus-item:focus-visible{outline:2px solid #00A2FF;outline-offset:2px}
+.nv-ico{position:relative;display:inline-flex;flex:none}
+.nv-ico svg{transition:transform .45s cubic-bezier(.3,1.6,.5,1);stroke:currentColor}
+.nimbus-item[aria-current="page"] .nv-ico svg{transform:translateY(-1px) scale(1.08)}
+.nv-door{fill:transparent}
+.nv-ico[data-fx="pop"] svg{animation:nvPop .5s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes nvPop{0%{transform:scale(.72)}60%{transform:scale(1.2)}100%{transform:translateY(-1px) scale(1.08)}}
+.nv-ico[data-fx="plane"] svg{animation:nvPlane 1.15s cubic-bezier(.55,0,.3,1) both}
+@keyframes nvPlane{0%{transform:none}12%{transform:translate(-3px,2px) rotate(7deg)}42%{transform:translate(64px,-26px) rotate(-24deg) scale(.9);opacity:0}43%{transform:translate(-60px,16px) rotate(-12deg) scale(.9);opacity:0}58%{opacity:1}80%{transform:translate(3px,-1px) rotate(2deg)}100%{transform:translateY(-1px) scale(1.08)}}
+.nv-ico[data-fx="plane"]::after{content:"";position:absolute;left:55%;top:48%;height:2px;width:46px;border-radius:2px;transform-origin:0 50%;
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.95));animation:nvTrail 1.15s ease-out both;pointer-events:none}
+@keyframes nvTrail{0%,8%{opacity:0;transform:rotate(-22deg) scaleX(0)}30%{opacity:.9;transform:rotate(-22deg) scaleX(1)}55%,100%{opacity:0;transform:rotate(-22deg) translateX(30px) scaleX(.2)}}
+.nv-ico[data-fx="drop"] svg{animation:nvDrop .95s cubic-bezier(.4,0,.3,1) both;transform-origin:50% 100%}
+@keyframes nvDrop{0%{transform:translateY(-1px)}26%{transform:translateY(-13px) scale(.88,1.12)}46%{transform:translateY(3px) scale(1.3,.68)}62%{transform:translateY(-3px) scale(.92,1.08)}80%{transform:translateY(0) scale(1.04,.97)}100%{transform:translateY(-1px) scale(1.08)}}
+.nv-ico[data-fx="drop"]::before,.nv-ico[data-fx="drop"]::after{content:"";position:absolute;bottom:0;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:currentColor;opacity:0;pointer-events:none}
+.nv-ico[data-fx="drop"]::before{animation:nvSplashL .95s ease-out both}
+.nv-ico[data-fx="drop"]::after{animation:nvSplashR .95s ease-out both}
+@keyframes nvSplashL{0%,44%{opacity:0;transform:none}50%{opacity:.9;transform:translate(-5px,-6px)}75%,100%{opacity:0;transform:translate(-11px,1px) scale(.4)}}
+@keyframes nvSplashR{0%,44%{opacity:0;transform:none}50%{opacity:.9;transform:translate(5px,-7px)}75%,100%{opacity:0;transform:translate(12px,1px) scale(.4)}}
+.nv-ico[data-fx="spin"] svg{animation:nvSpin 1s cubic-bezier(.2,.75,.25,1) both}
+@keyframes nvSpin{0%{transform:perspective(80px) rotateY(0)}100%{transform:perspective(80px) rotateY(360deg) translateY(-1px) scale(1.08)}}
+.nv-ico[data-fx="glow"] svg{animation:nvHop .8s cubic-bezier(.3,1.4,.5,1) both;transform-origin:50% 100%}
+@keyframes nvHop{0%{transform:none}30%{transform:translateY(-5px) scale(1.04,.96)}55%{transform:translateY(0) scale(1.12,.88)}75%{transform:translateY(-2px) scale(.98,1.04)}100%{transform:translateY(-1px) scale(1.08)}}
+.nv-ico[data-fx="glow"] .nv-door{animation:nvDoor 1.3s ease both}
+@keyframes nvDoor{0%{fill:transparent}30%{fill:#FFF3A8}100%{fill:rgba(126,232,255,.6)}}
+.nv-ico[data-fx="wave"] svg{animation:nvWave .9s ease-in-out both;transform-origin:50% 92%}
+@keyframes nvWave{0%{transform:none}20%{transform:rotate(-15deg)}40%{transform:rotate(12deg)}60%{transform:rotate(-8deg)}80%{transform:rotate(4deg)}100%{transform:translateY(-1px) scale(1.08)}}
+@media (max-width:960px){.nimbus-item{padding:0 12px}.nimbus-label{display:none}}
+@media (prefers-reduced-motion:reduce){.nv-ico svg,.nv-ico::before,.nv-ico::after,.nv-door{animation:none!important;transition:none}}
+.side{flex:1 1 0;display:flex;align-items:center;justify-content:flex-end;gap:calc(40*var(--u));font-size:calc(16.5*var(--u));font-weight:500}
+.side>a:first-child{
+  opacity:calc(1 - var(--dip)*.82);
+  padding:calc(8*var(--u)) calc(16*var(--u));
+  border-radius:99px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  transition:all .25s ease;
+}
+.side>a:first-child:hover{
+  background:rgba(255,255,255,.12);
+  transform:scale(1.04);
+  box-shadow:inset 0 0 8px rgba(255,255,255,.15),0 4px 12px rgba(0,0,0,.2);
+}
+
+/* Liquid Glass Buttons */
+.cta, .calc-submit, .receipt-btn.print, .receipt-btn.new, .close-btn, .printer-close-btn, .printer-sound-btn{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  cursor:pointer;
+  transition:transform .3s cubic-bezier(.16,1,.3,1),box-shadow .3s cubic-bezier(.16,1,.3,1),filter .2s ease,background .3s ease;
+  will-change:transform;
+  overflow:hidden;
+}
+
+.cta{
+  height:calc(46*var(--u));
+  padding:0 calc(26*var(--u));
+  border-radius:99px;
+  background:color-mix(in srgb, rgba(13,17,23,.75) calc((1 - var(--k))*100%), rgba(255,255,255,.82));
+  color:color-mix(in srgb, #fff calc((1 - var(--k))*100%), #0d1117);
+  opacity:calc(1 - var(--dip)*.62);
+  border:1px solid rgba(255,255,255,.32);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  box-shadow:0 0 8px rgba(0,0,0,.03),
+             0 2px 8px rgba(0,0,0,.15),
+             inset 3px 3px .5px -3.5px rgba(255,255,255,.25),
+             inset -3px -3px .5px -3.5px rgba(255,255,255,.85),
+             inset 1px 1px 1px -.5px rgba(255,255,255,.6),
+             inset -1px -1px 1px -.5px rgba(255,255,255,.6),
+             inset 0 0 6px 6px rgba(255,255,255,.12),
+             inset 0 0 2px 2px rgba(255,255,255,.06),
+             0 0 14px rgba(216,238,142,.22);
+}
+.cta:hover{
+  transform:scale(1.05) translateY(-1px);
+  filter:brightness(1.08);
+  box-shadow:0 0 12px rgba(0,0,0,.08),
+             0 6px 20px rgba(0,0,0,.28),
+             inset 3px 3px .5px -3px rgba(255,255,255,.4),
+             inset -3px -3px .5px -3px rgba(255,255,255,.95),
+             inset 0 0 10px 4px rgba(255,255,255,.18),
+             0 0 22px rgba(216,238,142,.45);
+}
+.cta:active{
+  transform:scale(.97) translateY(1px);
+  filter:brightness(.94);
+}
+.cta::after, .calc-submit::after, .receipt-btn.print::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 20%,rgba(255,255,255,.3) 45%,rgba(255,255,255,.55) 50%,rgba(255,255,255,.3) 55%,transparent 75%);
+  background-size:200% 100%;background-position:150% 0;
+  transition:background-position .65s ease;pointer-events:none;
+}
+.cta:hover::after, .calc-submit:hover::after, .receipt-btn.print:hover::after{
+  background-position:-50% 0;
+}
+
+/* ========================================================
+   ULTRA-PREMIUM VOLT-BEAM CTA BUTTON (#openBillBtn)
+   ======================================================== */
+.cta.cta-premium {
+  padding: 1.5px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  overflow: visible;
+  isolation: isolate;
+  transform-style: preserve-3d;
+  perspective: 700px;
+  text-decoration: none;
+}
+.cta.cta-premium::after {
+  display: none !important;
+}
+
+/* 1. Ambient Breathing Aura Glow beneath button */
+.cta-premium .cta-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  z-index: -2;
+  background: conic-gradient(
+    from 180deg at 50% 50%,
+    rgba(110, 231, 183, 0.7),
+    rgba(234, 255, 102, 0.85),
+    rgba(56, 189, 248, 0.75),
+    rgba(168, 85, 247, 0.5),
+    rgba(110, 231, 183, 0.7)
+  );
+  opacity: 0.45;
+  filter: blur(14px);
+  animation: ctaAmbientPulse 3.5s ease-in-out infinite, ctaRotateBeam 9s linear infinite;
+  pointer-events: none;
+  transition: opacity 0.35s ease, filter 0.35s ease, transform 0.35s ease;
+}
+
+/* 2. Rotating Laser Beam Border */
+.cta-premium .cta-border-beam {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cta-premium .cta-border-beam::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 340%;
+  height: 650%;
+  transform: translate(-50%, -50%) rotate(0deg);
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 65deg,
+    rgba(234, 255, 102, 0.15) 85deg,
+    #eaff66 112deg,
+    #ffffff 124deg,
+    #6ee7b7 138deg,
+    #38bdf8 165deg,
+    transparent 200deg
+  );
+  animation: ctaRotateBeam 2.8s linear infinite;
+}
+
+/* 3. Inner Liquid Glass Content */
+.cta-premium .cta-content {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 calc(22 * var(--u));
+  border-radius: 999px;
+  background: color-mix(in srgb, rgba(13, 19, 33, 0.9) calc((1 - var(--k)) * 100%), rgba(255, 255, 255, 0.92));
+  color: color-mix(in srgb, #ffffff calc((1 - var(--k)) * 100%), #0c121e);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.7),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.6),
+    0 4px 16px rgba(0, 0, 0, 0.28);
+  font-size: calc(14.5 * var(--u));
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* 4. Electric Animated Lightning Bolt */
+.cta-premium .cta-bolt {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  color: #eaff66;
+  animation: ctaBoltPulse 2.4s ease-in-out infinite;
+  transform-origin: center center;
+  flex-shrink: 0;
+}
+.cta-premium .cta-bolt svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 5. Typography */
+.cta-premium .cta-text {
+  position: relative;
+  z-index: 1;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  white-space: nowrap;
+}
+
+/* 6. Continuous Diagonal Specular Light Sweep */
+.cta-premium .cta-shimmer {
+  position: absolute;
+  inset: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.05) 80%,
+    transparent 100%
+  );
+  transform: translateX(-150%) skewX(-20deg);
+  animation: ctaSweepShine 3.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Keyframes */
+@keyframes ctaRotateBeam {
+  0% { transform: translate(-50%, -50%) rotate(0deg); }
+  100% { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+@keyframes ctaAmbientPulse {
+  0%, 100% {
+    opacity: 0.45;
+    transform: scale(0.96);
+    filter: blur(14px);
+  }
+  50% {
+    opacity: 0.88;
+    transform: scale(1.05);
+    filter: blur(20px);
+  }
+}
+
+@keyframes ctaBoltPulse {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: drop-shadow(0 0 3px #ffe066) drop-shadow(0 0 8px rgba(234, 255, 102, 0.65));
+  }
+  20% {
+    transform: scale(1.22) rotate(-8deg);
+    filter: drop-shadow(0 0 8px #ffffff) drop-shadow(0 0 16px #eaff66);
+  }
+  40% {
+    transform: scale(0.96) rotate(3deg);
+  }
+  60% {
+    transform: scale(1.15) rotate(-3deg);
+    filter: drop-shadow(0 0 6px #ffe066) drop-shadow(0 0 12px rgba(234, 255, 102, 0.85));
+  }
+  80% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes ctaSweepShine {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  22%, 100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+/* Hover State */
+.cta.cta-premium:hover {
+  transform: scale(1.07) translateY(-1px);
+  filter: brightness(1.1);
+}
+.cta.cta-premium:hover .cta-glow {
+  opacity: 1;
+  filter: blur(22px);
+  transform: scale(1.14);
+}
+.cta.cta-premium:hover .cta-border-beam::before {
+  animation-duration: 1.35s; /* faster laser orbiting on hover */
+}
+.cta.cta-premium:hover .cta-content {
+  background: color-mix(in srgb, rgba(18, 28, 48, 0.94) calc((1 - var(--k)) * 100%), rgba(255, 255, 255, 0.96));
+  box-shadow: 
+    inset 0 1.5px 1.5px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px 0 rgba(0, 0, 0, 0.7),
+    0 10px 28px rgba(0, 0, 0, 0.4),
+    0 0 24px rgba(216, 238, 142, 0.45);
+}
+.cta.cta-premium:hover .cta-bolt {
+  animation-duration: 1.1s;
+  transform: scale(1.25);
+}
+
+/* Active / Click State */
+.cta.cta-premium:active {
+  transform: scale(0.95) translateY(1.5px) !important;
+  filter: brightness(0.95);
+  transition-duration: 0.1s;
+}
+
+/* Bill Modal & Drawer */
+.modal-backdrop{position:fixed;inset:0;background:rgba(5,10,20,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;visibility:hidden;transition:opacity .25s ease,visibility .25s ease}
+.modal-backdrop.is-open{opacity:1;visibility:visible}
+.bill-card{position:relative;width:100%;max-width:500px;background:rgba(15,23,38,.88);border:1px solid rgba(255,255,255,.18);border-radius:20px;box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.15);padding:28px;color:#fff;transform:translateY(18px) scale(.98);transition:transform .28s cubic-bezier(.16,1,.3,1);max-height:92vh;overflow-y:auto}
+.modal-backdrop.is-open .bill-card{transform:translateY(0) scale(1)}
+.bill-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.bill-title{display:flex;align-items:center;gap:10px}
+.bill-title svg{width:24px;height:24px}
+.bill-title h2{font-size:20px;font-weight:600;letter-spacing:-.02em}
+.close-btn{
+  width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.08);color:#fff;font-size:18px;line-height:1;
+  border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(6px);
+  box-shadow:inset 1px 1px 1px rgba(255,255,255,.3),0 2px 6px rgba(0,0,0,.2);
+}
+.close-btn:hover{background:rgba(255,255,255,.2);transform:scale(1.08)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1 / -1}
+.form-group label{font-size:12.5px;font-weight:500;color:rgba(255,255,255,.72);letter-spacing:.02em;text-transform:uppercase}
+.form-group input{width:100%;height:44px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:0 14px;color:#fff;font-size:14.5px;font-family:inherit;outline:none;transition:border-color .2s,background .2s}
+.form-group input:focus{border-color:#d8ee8e;background:rgba(255,255,255,.11)}
+.form-group input::placeholder{color:rgba(255,255,255,.35)}
+
+.calc-submit{
+  width:100%;height:48px;border-radius:99px;
+  background:linear-gradient(135deg,rgba(226,238,159,.92),rgba(216,238,142,.92));
+  color:#0d1117;font-weight:600;font-size:15px;letter-spacing:-.01em;border:1px solid rgba(255,255,255,.45);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:0 0 8px rgba(0,0,0,.03),
+             0 4px 12px rgba(0,0,0,.15),
+             inset 3px 3px .5px -3px rgba(255,255,255,.6),
+             inset -3px -3px .5px -3px rgba(255,255,255,.9),
+             inset 1px 1px 1px -.5px rgba(255,255,255,.7),
+             inset 0 0 8px 4px rgba(255,255,255,.2),
+             0 0 16px rgba(216,238,142,.35);
+}
+.calc-submit:hover{
+  transform:scale(1.03) translateY(-1px);
+  filter:brightness(1.06);
+  box-shadow:0 0 14px rgba(0,0,0,.08),
+             0 8px 24px rgba(0,0,0,.25),
+             inset 3px 3px .5px -3px rgba(255,255,255,.8),
+             inset -3px -3px .5px -3px rgba(255,255,255,1),
+             0 0 24px rgba(216,238,142,.5);
+}
+.calc-submit:active{transform:scale(.98) translateY(1px)}
+
+/* Receipt Section */
+.receipt-box{display:none;margin-top:20px;padding-top:20px;border-top:1px dashed rgba(255,255,255,.2);animation:fadeIn .3s ease}
+.receipt-box.is-active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.receipt-header{text-align:center;margin-bottom:16px}
+.receipt-badge{display:inline-block;padding:3px 10px;border-radius:99px;background:rgba(216,238,142,.15);color:#d8ee8e;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:6px}
+.receipt-amount{font-size:32px;font-weight:700;color:#fff;letter-spacing:-.03em}
+.receipt-details{background:rgba(255,255,255,.04);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;margin-bottom:16px}
+.receipt-row{display:flex;justify-content:space-between;align-items:center}
+.receipt-row span:first-child{color:rgba(255,255,255,.65)}
+.receipt-row span:last-child{font-weight:500;color:#fff}
+.receipt-row.total{border-top:1px solid rgba(255,255,255,.1);padding-top:8px;margin-top:4px}
+.receipt-row.total span{font-weight:600;font-size:14.5px;color:#d8ee8e}
+
+.receipt-actions{display:flex;gap:12px}
+.receipt-btn{
+  flex:1;height:42px;border-radius:99px;font-size:13.5px;font-weight:600;
+  border:1px solid rgba(255,255,255,.3);backdrop-filter:blur(10px);
+}
+.receipt-btn.print{
+  background:linear-gradient(135deg,rgba(226,238,159,.92),rgba(216,238,142,.92));
+  color:#0d1117;
+  box-shadow:0 0 8px rgba(0,0,0,.03),
+             0 2px 6px rgba(0,0,0,.08),
+             inset 3px 3px .5px -3px rgba(255,255,255,.6),
+             inset -3px -3px .5px -3px rgba(255,255,255,.9),
+             inset 1px 1px 1px -.5px rgba(255,255,255,.7),
+             inset 0 0 6px 6px rgba(255,255,255,.15),
+             0 0 14px rgba(216,238,142,.35);
+}
+.receipt-btn.print:hover{
+  transform:scale(1.05) translateY(-1px);
+  filter:brightness(1.08);
+  box-shadow:0 0 14px rgba(0,0,0,.08),
+             0 6px 20px rgba(0,0,0,.25),
+             inset 3px 3px .5px -3px rgba(255,255,255,.8),
+             inset -3px -3px .5px -3px rgba(255,255,255,1),
+             0 0 22px rgba(216,238,142,.5);
+}
+.receipt-btn.new{
+  background:rgba(255,255,255,.08);color:rgba(255,255,255,.92);
+  box-shadow:0 0 8px rgba(0,0,0,.03),
+             0 2px 6px rgba(0,0,0,.08),
+             inset 3px 3px .5px -3px rgba(255,255,255,.1),
+             inset -3px -3px .5px -3px rgba(255,255,255,.6),
+             inset 1px 1px 1px -.5px rgba(255,255,255,.4),
+             inset 0 0 6px 6px rgba(255,255,255,.08);
+}
+.receipt-btn.new:hover{
+  background:rgba(255,255,255,.16);color:#fff;
+  transform:scale(1.04);
+  box-shadow:inset 0 0 10px rgba(255,255,255,.2),0 4px 14px rgba(0,0,0,.25);
+}
+.receipt-btn:active{transform:scale(.97) translateY(1px)}
+
+/* ---------------- THERMAL RECEIPT PRINTER ---------------- */
+.printer-overlay{
+  position:fixed;inset:0;z-index:2100;display:none;place-items:center;overflow:hidden;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color:#2b2a27;
+  background:radial-gradient(80% 70% at 50% 35%, #e9e6df 0%, #dcd8cf 55%, #cdc8bd 100%);
+  --pu:min(calc((100vw - 32px) / 440), calc((100dvh - 24px) / 930));
+  user-select:none;-webkit-user-select:none;
+}
+.printer-overlay.is-active{display:grid}
+.printer-grain{
+  pointer-events:none;position:absolute;inset:0;opacity:.35;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .4 0 0 0 .5 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.printer-pdf-btn{
+  position:absolute;top:16px;left:16px;z-index:250;display:inline-flex;align-items:center;gap:8px;
+  height:42px;padding:0 20px;border-radius:99px;font-size:13.5px;font-weight:600;letter-spacing:-.01em;
+  color:#0d1117;background:linear-gradient(135deg,rgba(226,238,159,.96),rgba(216,238,142,.96));
+  border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 0 8px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.15),
+             inset 3px 3px .5px -3px rgba(255,255,255,.6),
+             inset -3px -3px .5px -3px rgba(255,255,255,.9),
+             inset 1px 1px 1px -.5px rgba(255,255,255,.7),
+             inset 0 0 8px 4px rgba(255,255,255,.2),
+             0 0 16px rgba(216,238,142,.4);
+  cursor:pointer;transition:transform .25s cubic-bezier(.16,1,.3,1),box-shadow .25s,filter .2s;
+}
+.printer-pdf-btn:hover{
+  transform:scale(1.05) translateY(-1px);
+  box-shadow:0 0 14px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.25),0 0 24px rgba(216,238,142,.55);
+  filter:brightness(1.08);
+}
+.printer-pdf-btn:active{transform:scale(.97) translateY(1px)}
+.printer-close-btn{
+  position:absolute;top:16px;right:16px;z-index:250;width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.8);color:#2b2a27;font-size:22px;display:grid;place-items:center;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);border:1px solid rgba(0,0,0,.08);cursor:pointer;transition:transform .2s,background .2s;
+}
+.printer-close-btn:hover{background:#fff;transform:scale(1.06)}
+.printer-sound-btn{
+  position:absolute;bottom:16px;right:16px;z-index:250;width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.75);color:#2b2a27;display:grid;place-items:center;
+  box-shadow:0 1px 3px rgba(0,0,0,.1),0 6px 16px -8px rgba(0,0,0,.3);border:1px solid rgba(0,0,0,.06);
+  cursor:pointer;backdrop-filter:blur(4px);transition:transform .2s,background .2s;
+}
+.printer-sound-btn:hover{background:#fff;transform:scale(1.05)}
+.printer-stage{position:relative;width:calc(var(--pu)*440);height:calc(var(--pu)*930)}
+
+/* Printer Machine Body */
+.printer-machine{
+  position:absolute;left:calc(var(--pu)*20);top:calc(var(--pu)*640);
+  width:calc(var(--pu)*400);height:calc(var(--pu)*240);
+}
+.printer-chassis{
+  position:absolute;inset:0;border-radius:calc(var(--pu)*40);
+  background:linear-gradient(180deg,#f6f4ef 0%,#ebe8e1 55%,#dedad1 100%);
+  box-shadow:inset 0 calc(var(--pu)*2) calc(var(--pu)*1) rgb(255 255 255 / .9),
+             inset 0 calc(var(--pu)*-6) calc(var(--pu)*10) rgb(120 110 95 / .18),
+             0 calc(var(--pu)*2) calc(var(--pu)*3) rgb(60 50 40 / .18),
+             calc(var(--pu)*10) calc(var(--pu)*26) calc(var(--pu)*40) calc(var(--pu)*-8) rgb(60 50 40 / .4);
+}
+.printer-seam{
+  position:absolute;left:calc(var(--pu)*24);right:calc(var(--pu)*24);top:calc(var(--pu)*92);
+  height:calc(var(--pu)*2);border-radius:calc(var(--pu)*2);
+  background:rgb(120 110 95 / .25);box-shadow:0 calc(var(--pu)*1) 0 rgb(255 255 255 / .8);
+}
+.printer-slot{
+  position:absolute;left:calc(var(--pu)*52);width:calc(var(--pu)*336);top:calc(var(--pu)*43);
+  height:calc(var(--pu)*14);border-radius:calc(var(--pu)*7);
+  background:linear-gradient(180deg,#1b1a18,#3a3833);
+  box-shadow:inset 0 calc(var(--pu)*2) calc(var(--pu)*3) rgb(0 0 0 / .8),0 calc(var(--pu)*1) 0 rgb(255 255 255 / .85);
+}
+.printer-paper-lip{
+  position:absolute;left:calc(var(--pu)*70);width:calc(var(--pu)*300);top:calc(var(--pu)*41);
+  height:calc(var(--pu)*9);background:#fbfaf6;
+  -webkit-mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50% / calc(var(--pu)*12) 100%;
+  mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50% / calc(var(--pu)*12) 100%;
+}
+.printer-led{
+  position:absolute;left:calc(var(--pu)*250);top:calc(var(--pu)*132);
+  width:calc(var(--pu)*9);height:calc(var(--pu)*9);border-radius:50%;
+  background:#4fd27a;box-shadow:0 0 calc(var(--pu)*7) rgb(79 210 122 / .8);
+  transition:background .3s;
+}
+.printer-led.is-printing{
+  background:#ffb340;box-shadow:0 0 calc(var(--pu)*8) #ffb340;
+  animation:ledBlink .5s infinite alternate;
+}
+@keyframes ledBlink{from{opacity:1}to{opacity:.35}}
+.printer-btn{
+  position:absolute;left:calc(var(--pu)*300);top:calc(var(--pu)*104);
+  width:calc(var(--pu)*72);height:calc(var(--pu)*72);border-radius:50%;
+  background:radial-gradient(circle at 50% 45%,#2f2d29,#1a1917);
+  box-shadow:inset 0 calc(var(--pu)*2) calc(var(--pu)*3) rgb(0 0 0 / .6),0 calc(var(--pu)*1) 0 rgb(255 255 255 / .9);
+  display:grid;place-items:center;cursor:pointer;border:none;outline:none;
+}
+.printer-btn-inner{
+  display:grid;place-items:center;border-radius:50%;font-weight:700;letter-spacing:.14em;color:#fff;
+  width:calc(var(--pu)*60);height:calc(var(--pu)*60);font-size:calc(var(--pu)*11);
+  background:radial-gradient(circle at 38% 30%,#ff8a7a 0%,#f2392c 38%,#c81d13 75%,#9c140d 100%);
+  box-shadow:inset 0 calc(var(--pu)*-3) calc(var(--pu)*5) rgb(80 0 0 / .45),
+             inset 0 calc(var(--pu)*2) calc(var(--pu)*2) rgb(255 200 190 / .7),
+             0 calc(var(--pu)*4) calc(var(--pu)*6) rgb(0 0 0 / .45);
+  text-shadow:0 calc(var(--pu)*1) calc(var(--pu)*1) rgb(100 0 0 / .6);
+  transition:transform .1s,filter .1s,box-shadow .1s;
+}
+.printer-btn:active .printer-btn-inner,
+.printer-btn.is-pressed .printer-btn-inner{
+  transform:translateY(calc(var(--pu)*2)) scale(.96);filter:brightness(.92);
+  box-shadow:inset 0 calc(var(--pu)*3) calc(var(--pu)*6) rgb(80 0 0 / .55);
+}
+.printer-brand{
+  position:absolute;left:calc(var(--pu)*34);top:calc(var(--pu)*182);
+  font-size:calc(var(--pu)*18);font-weight:700;letter-spacing:-.02em;
+  background:linear-gradient(180deg,#6b6b70 0%,#1c1c1f 42%,#000 50%,#0b0b0d 78%,#2a2a2e 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 calc(var(--pu)*1) 0 rgb(255 255 255 / .9)) drop-shadow(0 calc(var(--pu)*1) calc(var(--pu)*1.5) rgb(0 0 0 / .25));
+}
+.printer-tear-bar{
+  position:absolute;z-index:20;left:calc(var(--pu)*48);width:calc(var(--pu)*344);top:calc(var(--pu)*678);
+  height:calc(var(--pu)*7);background:linear-gradient(180deg,#f4f5f7,#a9adb5 60%,#7c8089);
+  -webkit-mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50% / calc(var(--pu)*6) 100%;
+  mask:conic-gradient(from 135deg at top,#0000,#000 1deg 89deg,#0000 90deg) 50% / calc(var(--pu)*6) 100%;
+  filter:drop-shadow(0 calc(var(--pu)*1) calc(var(--pu)*1) rgb(0 0 0 / .35));
+}
+.printer-hint{
+  position:absolute;left:0;right:0;top:calc(var(--pu)*898);text-align:center;color:#6f6a60;
+  font-size:calc(var(--pu)*13);letter-spacing:.02em;transition:opacity .3s;
+}
+
+/* Paper Strip & Clip Box */
+.printer-clip{
+  position:absolute;z-index:10;overflow:hidden;pointer-events:none;
+  left:calc(var(--pu)*30);width:calc(var(--pu)*380);top:calc(var(--pu)*-3000);
+  height:calc(var(--pu)*3690);
+}
+.paper-strip{
+  position:absolute;bottom:0;left:calc(var(--pu)*40);width:calc(var(--pu)*300);
+  pointer-events:auto;cursor:grab;touch-action:none;outline:none;
+  box-shadow:0 calc(var(--pu)*10) calc(var(--pu)*24) calc(var(--pu)*-6) rgb(40 35 25 / .35);
+  transform-origin:50% 100%;
+}
+.paper-strip:active{cursor:grabbing}
+.paper-segment{
+  position:relative;overflow:hidden;height:0;
+}
+.paper-sheet{
+  position:relative;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+  color:#262624;padding:calc(var(--pu)*22) calc(var(--pu)*22) calc(var(--pu)*30);line-height:1.55;
+  background:linear-gradient(90deg,#f1f0eb 0%,#fdfdfa 6%,#fdfdfa 94%,#eeede8 100%);
+}
+.paper-inner{opacity:.88;filter:blur(.15px)}
+.paper-center{text-align:center}
+.paper-title{font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:calc(var(--pu)*17)}
+.paper-sub{font-size:calc(var(--pu)*10.5);margin-top:calc(var(--pu)*2)}
+.paper-rule{border-top:1px dashed rgba(42,42,42,.5);margin:calc(var(--pu)*9) 0}
+.paper-row{display:flex;justify-content:space-between;gap:calc(var(--pu)*12);font-size:calc(var(--pu)*11.5)}
+.paper-row.strong{font-weight:700;font-size:calc(var(--pu)*14)}
+.paper-row span:last-child{font-variant-numeric:tabular-nums;flex-shrink:0}
+.paper-barcode{
+  display:flex;align-items:stretch;justify-content:center;height:calc(var(--pu)*46);gap:calc(var(--pu)*1.5);margin-top:calc(var(--pu)*6);
+}
+.paper-barcode span{background:#262624}
+.paper-code{text-align:center;letter-spacing:.3em;font-size:calc(var(--pu)*9.5);margin-top:calc(var(--pu)*4)}
+.paper-thanks{text-align:center;font-weight:700;letter-spacing:.2em;font-size:calc(var(--pu)*12);margin-top:calc(var(--pu)*14)}
+.paper-curl{
+  pointer-events:none;position:absolute;inset-x:0;top:0;height:calc(var(--pu)*26);
+  background:linear-gradient(180deg,rgb(0 0 0 / .07),transparent);
+}
+
+/* Torn Flying Strip */
+.paper-flying{
+  position:absolute;z-index:30;pointer-events:none;left:calc(var(--pu)*70);width:calc(var(--pu)*300);
+  bottom:calc(var(--pu)*240);transform-origin:50% 100%;
+  -webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50% / calc(var(--pu)*12) 100%;
+  mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50% / calc(var(--pu)*12) 100%;
+  transition:transform .85s cubic-bezier(.2,.7,.3,1),opacity .85s ease-in;
+}
+h1{margin-top:calc(92*var(--u));text-align:center;font-size:calc(64*var(--u));line-height:1.09;font-weight:500;letter-spacing:-.022em;color:var(--ink)}
+h1 span{display:block}
+h1 .l1,h1 .y{opacity:calc(1 - var(--dip)*.8)}
+h1 i{font-style:normal;color:color-mix(in srgb,#14202f calc((1 - var(--k2))*42%),color-mix(in srgb,#fff calc(var(--k2)*100%),#7c8794))}
+h1 .y{display:inline}
+.dock{margin-top:auto;padding-bottom:calc(40*var(--u));display:flex;flex-direction:column;align-items:center}
+.toggle{position:relative;display:grid;grid-template-columns:1fr 1fr;width:calc(524*var(--u));height:calc(86*var(--u));padding:calc(2*var(--u));border-radius:calc(16*var(--u));overflow:hidden;
+  background:rgba(120,132,140,.34);border:1px solid rgba(255,255,255,.2);-webkit-backdrop-filter:blur(calc(14*var(--u)));backdrop-filter:blur(calc(14*var(--u)));
+  box-shadow:0 0 16px rgba(0,0,0,.15),inset 1px 1px 1px rgba(255,255,255,.3)}
+.toggle button{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(3*var(--u));border-radius:calc(13*var(--u));color:#fff;overflow:hidden;
+  transition:transform .3s cubic-bezier(.16,1,.3,1),filter .2s ease;will-change:transform}
+.toggle button:hover{transform:scale(1.03);filter:brightness(1.06)}
+.toggle button:active{transform:scale(.98)}
+.toggle button:before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(160deg,#f7f8dc,#e2ee9f 90%);box-shadow:inset 0 0 calc(18*var(--u)) rgba(255,255,255,.65),0 0 14px rgba(216,238,142,.35);opacity:var(--on)}
+.toggle b,.toggle small{position:relative;color:color-mix(in srgb,#1c2316 calc(var(--on)*100%),#fff)}
+.toggle b{font-size:calc(23*var(--u));font-weight:500;letter-spacing:-.012em}
+.toggle small{font-size:calc(15*var(--u));opacity:.72}
+.toggle button:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+#bm{--on:calc(1 - var(--k))}#bn{--on:var(--k)}
+.cap{margin-top:calc(22*var(--u));text-align:center;font-size:calc(16.4*var(--u));line-height:1.3;color:var(--soft)}
+@media (max-width:820px){
+  :root{--u:1px}
+  .bar{padding:16px 16px 0}
+  .logo{font-size:21px}.logo svg{width:32px;height:32px}
+  .links,.side>a:first-child{display:none}
+  .cta{height:40px;padding:0 16px;font-size:14px}
+  .cta.cta-premium{height:40px;padding:1.5px}
+  .cta.cta-premium .cta-content{padding:0 14px;font-size:13.5px;gap:6px}
+  .cta.cta-premium .cta-bolt{width:14px;height:14px}
+  h1{margin-top:34px;padding:0 16px;font-size:clamp(34px,10.4vw,56px)}
+  .layer img,.home .cut{object-position:72% 62%!important}
+  .dock{width:100%;padding:0 16px 24px}
+  .toggle{width:100%;max-width:440px;height:74px}
+  .toggle b{font-size:19px}.toggle small{font-size:13px}
+  .cap{font-size:14px;max-width:360px}
+  .cap br{display:none}
+}
+
+/* VoltEdge Shader Splash Loading Screen */
+.loader-overlay{
+  position:fixed;inset:0;z-index:99999;background:#000;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
+  transition:opacity .75s cubic-bezier(.22,1,.36,1),transform .75s cubic-bezier(.22,1,.36,1),visibility .75s;
+}
+.loader-overlay.is-hidden{
+  opacity:0;visibility:hidden;pointer-events:none;transform:scale(1.04);
+}
+.loader-canvas{
+  position:absolute;inset:0;width:100%;height:100%;pointer-events:none;
+}
+.loader-content{
+  position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;color:#fff;padding:24px;pointer-events:auto;max-width:680px;
+}
+.loader-brand{
+  display:flex;align-items:center;justify-content:center;gap:16px;
+}
+.loader-bolt{
+  width:clamp(40px,7vw,64px);height:clamp(40px,7vw,64px);
+  filter:drop-shadow(0 0 18px rgba(216,238,142,.85));
+  animation:boltPulse 1.6s ease-in-out infinite alternate;
+}
+@keyframes boltPulse{
+  0%{transform:scale(.95);filter:drop-shadow(0 0 12px rgba(216,238,142,.6))}
+  100%{transform:scale(1.08);filter:drop-shadow(0 0 28px rgba(216,238,142,.95))}
+}
+.loader-title{
+  font-size:clamp(46px,9vw,88px);font-weight:800;letter-spacing:-.04em;color:#fff;
+  line-height:1;
+  text-shadow:0 0 35px rgba(216,238,142,.75),0 0 80px rgba(0,162,255,.5);
+}
+.loader-tagline{
+  font-size:clamp(12px,2.2vw,15px);font-weight:500;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.88);margin-top:16px;margin-bottom:28px;
+  text-shadow:0 2px 10px rgba(0,0,0,.9);
+}
+.loader-bar-wrap{
+  width:clamp(220px,40vw,320px);height:5px;border-radius:99px;
+  background:rgba(255,255,255,.12);overflow:hidden;margin-bottom:14px;
+  box-shadow:0 0 12px rgba(0,0,0,.6);backdrop-filter:blur(6px);
+}
+.loader-bar-progress{
+  height:100%;width:0%;border-radius:99px;
+  background:linear-gradient(90deg,#6d8f2a,#d8ee8e,#00A2FF);
+  box-shadow:0 0 16px #d8ee8e;transition:width .4s ease;
+}
+.loader-status{
+  font-size:13px;font-weight:500;color:rgba(255,255,255,.7);letter-spacing:.04em;min-height:18px;
+}
+.loader-skip-btn{
+  margin-top:22px;padding:9px 24px;font-size:13px;font-weight:600;letter-spacing:.02em;
+  color:rgba(255,255,255,.9);background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.24);border-radius:99px;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  cursor:pointer;transition:all .25s ease;
+  box-shadow:0 4px 16px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.4);
+}
+.loader-skip-btn:hover{
+  background:rgba(255,255,255,.18);color:#fff;transform:translateY(-1px) scale(1.04);
+  box-shadow:0 6px 20px rgba(0,0,0,.5),0 0 18px rgba(216,238,142,.35);
+}
+
+/* Detailed Content Sections */
+.sections-wrapper{
+  position:relative;
+  z-index:10;
+  background:transparent;
+  border-top:1px solid rgba(255,255,255,.08);
+}
+.page-section{
+  position:relative;
+  max-width:1240px;
+  margin:0 auto;
+  padding:100px 32px 60px;
+  scroll-margin-top:80px;
+  color:#fff;
+}
+.sec-header{
+  text-align:center;
+  margin-bottom:48px;
+}
+.sec-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 16px;
+  border-radius:999px;
+  background:rgba(216,238,142,.12);
+  border:1px solid rgba(216,238,142,.28);
+  color:#d8ee8e;
+  font-size:12.5px;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  margin-bottom:14px;
+}
+.sec-title{
+  font-size:clamp(30px,4.5vw,48px);
+  font-weight:700;
+  letter-spacing:-.03em;
+  line-height:1.15;
+  color:#fff;
+  margin-bottom:12px;
+}
+.sec-subtitle{
+  font-size:clamp(15px,1.8vw,17.5px);
+  color:rgba(255,255,255,.68);
+  max-width:680px;
+  margin:0 auto;
+  line-height:1.6;
+}
+
+/* Glass Cards & Grids */
+.glass-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(270px,1fr));
+  gap:24px;
+  margin-top:32px;
+}
+.glass-card{
+  background:rgba(12,22,42,.72);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:22px;
+  padding:32px 28px;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  box-shadow:0 16px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.15);
+  transition:transform .3s cubic-bezier(.16,1,.3,1),border-color .3s ease,box-shadow .3s ease;
+}
+.glass-card:hover{
+  transform:translateY(-5px);
+  border-color:rgba(216,238,142,.4);
+  box-shadow:0 24px 50px rgba(0,0,0,.45),0 0 24px rgba(216,238,142,.18);
+}
+.card-icon{
+  width:50px;height:50px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(216,238,142,.12);border:1px solid rgba(216,238,142,.25);
+  color:#d8ee8e;margin-bottom:20px;
+}
+.card-icon svg{width:24px;height:24px}
+.card-title{font-size:19px;font-weight:600;margin-bottom:10px;color:#fff;letter-spacing:-.01em}
+.card-desc{font-size:14.5px;line-height:1.65;color:rgba(255,255,255,.66)}
+
+/* Live Interactive Tariff Box */
+.tariff-box{
+  background:rgba(12,22,42,.75);
+  border:1px solid rgba(255,255,255,.18);
+  border-radius:28px;
+  padding:40px;
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  box-shadow:0 24px 60px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.2);
+  display:grid;grid-template-columns:1.2fr 1fr;gap:40px;
+  align-items:center;
+}
+@media (max-width:920px){.tariff-box{grid-template-columns:1fr;gap:28px;padding:26px}}
+.tariff-controls{display:flex;flex-direction:column;gap:22px}
+.control-row label{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600;color:rgba(255,255,255,.85);margin-bottom:10px}
+.control-row label span{color:#d8ee8e;font-size:18px;font-weight:700}
+.tariff-slider{width:100%;height:8px;border-radius:99px;background:rgba(255,255,255,.15);outline:none;-webkit-appearance:none;cursor:pointer}
+.tariff-slider::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:#d8ee8e;cursor:pointer;box-shadow:0 0 14px #d8ee8e}
+.rate-input-group{display:flex;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);border-radius:12px;padding:4px 14px}
+.rate-input-group span{color:#d8ee8e;font-weight:700;font-size:16px;margin-right:6px}
+.rate-input-group input{background:none;border:none;color:#fff;font-size:16px;font-weight:600;width:100%;height:40px;outline:none}
+
+.tariff-summary-card{
+  background:rgba(0,0,0,.4);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:22px;
+  padding:32px 28px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+}
+.summary-line{display:flex;justify-content:space-between;align-items:center;font-size:14.5px;color:rgba(255,255,255,.75);padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)}
+.summary-line.total{border-bottom:none;padding-top:8px;font-size:18px;font-weight:700;color:#fff}
+.summary-line.total .price{font-size:32px;color:#d8ee8e;text-shadow:0 0 20px rgba(216,238,142,.45)}
+
+/* Slab Table */
+.slab-table-wrap{
+  margin-top:36px;background:rgba(12,22,42,.65);border:1px solid rgba(255,255,255,.12);
+  border-radius:20px;overflow:hidden;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.slab-table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}
+.slab-table th{background:rgba(255,255,255,.06);color:rgba(255,255,255,.8);padding:16px 22px;font-weight:600;text-transform:uppercase;font-size:12px;letter-spacing:.05em}
+.slab-table td{padding:16px 22px;border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.75)}
+.slab-table tr:hover td{background:rgba(255,255,255,.03);color:#fff}
+.badge-rate{background:rgba(216,238,142,.15);color:#d8ee8e;font-weight:700;padding:4px 10px;border-radius:6px;display:inline-block}
+
+/* Inline Generator Studio Card */
+.gen-card{
+  background:rgba(12,22,42,.75);border:1px solid rgba(255,255,255,.18);
+  border-radius:28px;padding:36px;box-shadow:0 24px 60px rgba(0,0,0,.5);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  max-width:840px;margin:0 auto;
+}
+.gen-actions{display:flex;gap:16px;margin-top:20px;flex-wrap:wrap}
+
+/* Footer */
+.site-footer{
+  border-top:1px solid rgba(255,255,255,.08);
+  padding:56px 32px 40px;
+  background:rgba(7,13,26,.85);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  color:rgba(255,255,255,.5);
+  font-size:14px;
+  text-align:center;
+  position:relative;
+  z-index:10;
+}
+.footer-logo{display:inline-flex;align-items:center;gap:10px;color:#fff;font-size:22px;font-weight:700;margin-bottom:14px}
+.footer-logo svg{width:28px;height:28px}
+.footer-links{display:flex;justify-content:center;gap:24px;margin:20px 0;flex-wrap:wrap}
+.footer-links a{color:rgba(255,255,255,.7);transition:color .2s}
+.footer-links a:hover{color:#d8ee8e}
+</style>
+</head>
+<body>
+
+<!-- VoltEdge Shader Splash / Loading Screen -->
+<div id="loaderOverlay" class="loader-overlay" role="dialog" aria-modal="true" aria-label="Loading VoltEdge">
+  <canvas id="loaderCanvas" class="loader-canvas"></canvas>
+  <div class="loader-content">
+    <div class="loader-brand">
+      <svg class="loader-bolt" viewBox="0 0 40 40" aria-hidden="true">
+        <path fill="#d8ee8e" d="M22 2L9 22h9l-2 16 15-22h-10l3-14z"/>
+      </svg>
+      <h1 class="loader-title">VoltEdge</h1>
+    </div>
+    <p class="loader-tagline">Smart Electricity Billing & Power Grid System</p>
+    <div class="loader-bar-wrap">
+      <div class="loader-bar-progress" id="loaderBar"></div>
+    </div>
+    <span class="loader-status" id="loaderStatus">Initializing Grid Console...</span>
+    <button type="button" class="loader-skip-btn" id="loaderSkipBtn">Enter Site →</button>
+  </div>
+</div>
+<!-- Permanently Fixed Top Navigation Bar -->
+<header class="bar" id="mainHeader">
+  <a class="logo" href="#" aria-label="VoltEdge Electricity Management">
+    <svg viewBox="0 0 40 40" aria-hidden="true">
+      <g fill="color-mix(in srgb,#6d8f2a calc((1 - var(--k))*100%),#d8ee8e)">
+        <path d="M22 2L9 22h9l-2 16 15-22h-10l3-14z"/>
+      </g>
+    </svg>
+    VoltEdge
+  </a>
+  <nav class="nimbus-nav" id="topNav" data-tone="dark" role="navigation" aria-label="Main Navigation">
+    <div class="nimbus-glass" aria-hidden="true"></div>
+    <canvas class="nimbus-water" id="nimbusCanvas" aria-hidden="true"></canvas>
+    <div class="nimbus-drop" id="nimbusDrop" aria-hidden="true"></div>
+    <button type="button" class="nimbus-item" id="navGenerate" aria-current="page" data-idx="0">
+      <span class="nv-ico" data-fx="glow">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" />
+        </svg>
+      </span>
+      <span class="nimbus-label">Generate Bill</span>
+    </button>
+    <button type="button" class="nimbus-item" id="navTariff" data-idx="1">
+      <span class="nv-ico" data-fx="spin">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="8.5" /><path d="M3.5 12h17M12 3.5c2.6 2.4 2.6 14.6 0 17M12 3.5c-2.6 2.4-2.6 14.6 0 17" />
+        </svg>
+      </span>
+      <span class="nimbus-label">Tariff Calculator</span>
+    </button>
+    <button type="button" class="nimbus-item" id="navGuide" data-idx="2">
+      <span class="nv-ico" data-fx="drop">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3.5s6 6.4 6 10.6a6 6 0 0 1-12 0C6 9.9 12 3.5 12 3.5Z" />
+        </svg>
+      </span>
+      <span class="nimbus-label">Billing Guide</span>
+    </button>
+    <button type="button" class="nimbus-item" id="navAbout" data-idx="3">
+      <span class="nv-ico" data-fx="pop">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3.5 11.2 12 4l8.5 7.2" /><path d="M6 9.6V20h12V9.6" /><path class="nv-door" d="M10 20v-5h4v5Z" />
+        </svg>
+      </span>
+      <span class="nimbus-label">About System</span>
+    </button>
+  </nav>
+  <div class="side">
+    <a href="#secTariff" id="openCasesBtn">Tariff Guide</a>
+    <a class="cta cta-premium" id="openBillBtn" href="#generate-bill" role="button" aria-label="Generate Electricity Bill">
+      <span class="cta-glow" aria-hidden="true"></span>
+      <span class="cta-border-beam" aria-hidden="true"></span>
+      <span class="cta-content">
+        <span class="cta-bolt" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M13 2L3 14h8l-2 8 11-12h-8l3-8z"/>
+          </svg>
+        </span>
+        <span class="cta-text">Generate Bill</span>
+        <span class="cta-shimmer" aria-hidden="true"></span>
+      </span>
+    </a>
+  </div>
+</header>
+
+<!-- Living Home Scene Background (Farmhouse, Solar Roof, Sky, WebGL Fog) -->
+<div class="site-bg-fixed" aria-hidden="true">
+  <div class="layer sky">
+    <img id="skyM" alt="" src="https://images.higgs.ai/?default=1&amp;output=webp&amp;url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261102_040343_a73684b4-3f71-4613-a843-c8be80fb1211.png&amp;w=1600&amp;q=80">
+    <img id="skyN" alt="" src="https://images.higgs.ai/?default=1&amp;output=webp&amp;url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261102_040308_f31964ab-ed8e-4ea4-90eb-3226c0859936.png&amp;w=1600&amp;q=80">
+  </div>
+  <div class="layer home">
+    <div class="set" id="setM">
+      <div class="layer ground"><img alt="" src="https://images.higgs.ai/?default=1&amp;output=webp&amp;url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261102_040259_1be34093-835e-4de4-b3a8-f875e6a74591.png&amp;w=2560&amp;q=85"></div>
+      <img class="cut" alt="A charcoal farmhouse with solar panels in soft morning light" src="https://images.higgs.ai/?default=1&amp;output=webp&amp;url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261102_040416_e3b05fa4-cc80-4a43-afde-8a0a053933e9.png&amp;w=2560&amp;q=85" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 62%">
+    </div>
+    <div class="set is-on" id="setN">
+      <div class="layer ground"><img alt="" src="https://images.higgs.ai/?default=1&amp;output=webp&amp;url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261102_040211_c8fd4865-285e-4c1f-8a37-4bfe0771357b.png&amp;w=2560&amp;q=85"></div>
+      <img class="cut" alt="The same farmhouse at dusk with warm amber windows" src="https://images.higgs.ai/?default=1&amp;output=webp&amp;url=https%3A%2F%2Fd8j0ntlcm91z4.cloudfront.net%2Fuser_38xzZboKViGWJOttwIXH07lWA1P%2Fhf_20261102_040415_2ab95096-8c39-449f-b36c-17c2813815a4.png&amp;w=2560&amp;q=85" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 62%">
+    </div>
+  </div>
+  <div class="tilt"></div>
+  <canvas id="fog" aria-hidden="true"></canvas>
+</div>
+
+<!-- Scrollable Page Content -->
+<main class="page-scroll-container">
+  <div class="hero-view">
+    <h1><span class="l1">Smart Electricity Billing</span><span><i>precision power metering for</i> <span class="y">Modern Homes</span></span></h1>
+    <div class="dock">
+      <div class="toggle" role="group" aria-label="Grid cycle mode">
+        <button id="bm" aria-pressed="false"><b>Day Cycle</b><small>Standard Grid Mode</small></button>
+        <button id="bn" aria-pressed="true"><b>Night Cycle</b><small>Off-Peak Monitoring</small></button>
+      </div>
+      <p class="cap">Enterprise power management and automated electricity billing. Enter your regional unit rate and meter consumption<br>to calculate energy charges with instant, certified thermal receipt generation.</p>
+    </div>
+  </div>
+
+<div class="sections-wrapper">
+  <!-- SECTION: TARIFF CALCULATOR -->
+  <section id="secTariff" class="page-section" aria-labelledby="secTariffTitle">
+    <div class="sec-header">
+      <span class="sec-pill">🌐 Regional Tariff Engine</span>
+      <h2 class="sec-title" id="secTariffTitle">Electricity Tariff Calculator</h2>
+      <p class="sec-subtitle">Adjust your electricity consumption and regional per-unit rate to calculate energy charges, fixed grid charges, and state tariff slab estimates.</p>
+    </div>
+
+    <div class="tariff-box">
+      <div class="tariff-controls">
+        <div class="control-row">
+          <label for="sliderUnits">Monthly Consumption: <span id="valUnitsDisplay">150 kWh</span></label>
+          <input type="range" class="tariff-slider" id="sliderUnits" min="0" max="1000" step="5" value="150">
+        </div>
+        <div class="control-row">
+          <label for="inputLiveRate">Regional Unit Rate (₹/kWh): <span id="valRateDisplay">₹6.00 / unit</span></label>
+          <div class="rate-input-group">
+            <span>₹</span>
+            <input type="number" id="inputLiveRate" min="1" max="25" step="0.25" value="6.00">
+          </div>
+        </div>
+        <div style="font-size:13.5px;color:rgba(255,255,255,.6);line-height:1.5">
+          ℹ️ <i>Formula: Total Bill = (Units Consumed × Regional Rate) + Fixed Charge (₹50.00).</i>
+        </div>
+      </div>
+
+      <div class="tariff-summary-card">
+        <div class="summary-line">
+          <span>Units Consumed</span>
+          <strong id="liveSumUnits" style="color:#fff">150 kWh</strong>
+        </div>
+        <div class="summary-line">
+          <span>Regional Applied Rate</span>
+          <strong id="liveSumRate" style="color:#fff">₹6.00 / unit</strong>
+        </div>
+        <div class="summary-line">
+          <span>Base Energy Charge</span>
+          <strong id="liveSumEnergy" style="color:#fff">₹900.00</strong>
+        </div>
+        <div class="summary-line">
+          <span>Fixed Grid Service Charge</span>
+          <strong style="color:#fff">₹50.00</strong>
+        </div>
+        <div class="summary-line total">
+          <span>Estimated Bill:</span>
+          <span class="price" id="liveSumTotal">₹950.00</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- State Tariff Slab Matrix -->
+    <div class="slab-table-wrap">
+      <table class="slab-table">
+        <thead>
+          <tr>
+            <th>Consumer Category</th>
+            <th>Monthly Units Slab</th>
+            <th>Indicative Rate (₹/kWh)</th>
+            <th>Fixed Charge</th>
+            <th>Tariff Classification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Domestic Lifeline</strong></td>
+            <td>0 – 100 kWh</td>
+            <td><span class="badge-rate">₹4.25 – ₹6.00</span></td>
+            <td>₹30.00 / mo</td>
+            <td>Subsidized Rural & Urban Domestic</td>
+          </tr>
+          <tr>
+            <td><strong>Standard Residential</strong></td>
+            <td>101 – 300 kWh</td>
+            <td><span class="badge-rate">₹6.00 – ₹7.50</span></td>
+            <td>₹50.00 / mo</td>
+            <td>Standard Household Metering</td>
+          </tr>
+          <tr>
+            <td><strong>High Consumption</strong></td>
+            <td>301+ kWh</td>
+            <td><span class="badge-rate">₹8.20 – ₹9.00</span></td>
+            <td>₹75.00 / mo</td>
+            <td>Peak Load Residential</td>
+          </tr>
+          <tr>
+            <td><strong>Commercial & Retail</strong></td>
+            <td>All Units</td>
+            <td><span class="badge-rate">₹8.80 – ₹10.50</span></td>
+            <td>₹120.00 / mo</td>
+            <td>Shops, Offices & Commercial Establishments</td>
+          </tr>
+          <tr>
+            <td><strong>Solar Rooftop Export</strong></td>
+            <td>Surplus Generation</td>
+            <td><span class="badge-rate" style="background:rgba(0,162,255,.15);color:#55b5ff">-₹3.80 (Credit)</span></td>
+            <td>₹0.00</td>
+            <td>Net Metering Feed-in Tariff</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SECTION 3: BILLING GUIDE -->
+  <section id="secGuide" class="page-section" aria-labelledby="secGuideTitle">
+    <div class="sec-header">
+      <span class="sec-pill">💧 Consumer Knowledge</span>
+      <h2 class="sec-title" id="secGuideTitle">Electricity Billing Guide</h2>
+      <p class="sec-subtitle">A step-by-step handbook on how power meters compute units, how regional rates apply, and how to verify your billing statements.</p>
+    </div>
+
+    <div class="glass-grid">
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="6" y1="12" x2="6" y2="12"/><line x1="10" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="14" y2="12"/><line x1="18" y1="12" x2="18" y2="12"/></svg>
+        </div>
+        <h3 class="card-title">1. How Meters Read Units</h3>
+        <p class="card-desc">Your electronic meter records electricity consumption in <strong>kilowatt-hours (kWh)</strong>, where 1 unit = 1 kWh (1000 watts used for 1 hour). Net consumption is calculated as <i>Current Reading minus Previous Reading</i>.</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><line x1="12" y1="18" x2="12" y2="20"/><line x1="12" y1="4" x2="12" y2="6"/></svg>
+        </div>
+        <h3 class="card-title">2. Regional Unit Rates</h3>
+        <p class="card-desc">State Electricity Regulatory Commissions (SERC) set tariffs based on infrastructure costs, generation fuel mix, and distribution losses. In VoltEdge, you can specify your exact local rate per unit (default: ₹6.00).</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3 class="card-title">3. Fixed Grid Maintenance</h3>
+        <p class="card-desc">A fixed charge (standard ₹50.00) is levied on each bill cycle to maintain high-voltage transformers, power sub-stations, and 24/7 grid reliability regardless of units consumed.</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
+        </div>
+        <h3 class="card-title">4. Thermal Receipts & PDFs</h3>
+        <p class="card-desc">VoltEdge features a simulated thermal receipt printer with interactive feed sounds and zigzag tear-off animations. Once printed, you can download a certified vector PDF with scannable barcode.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4: ABOUT SYSTEM -->
+  <section id="secAbout" class="page-section" aria-labelledby="secAboutTitle">
+    <div class="sec-header">
+      <span class="sec-pill">🏠 System Architecture</span>
+      <h2 class="sec-title" id="secAboutTitle">About VoltEdge Enterprise</h2>
+      <p class="sec-subtitle">Engineered for precision billing, zero downtime, and complete consumer transparency with Java OOP and modern WebGL.</p>
+    </div>
+
+    <div class="glass-grid">
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        </div>
+        <h3 class="card-title">Java OOP Backend</h3>
+        <p class="card-desc">Powered by pure Java OOP principles with strict data encapsulation, dynamic regional rate multipliers, and high-concurrency HTTP socket serving via <code>ElectricityBillWebServer.java</code>.</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="m4.93 4.93 4.24 4.24M14.83 9.17l4.24-4.24M14.83 14.83l4.24 4.24M9.17 14.83l-4.24 4.24"/></svg>
+        </div>
+        <h3 class="card-title">WebGL Lumen Roof Hero</h3>
+        <p class="card-desc">Driven by a unified mathematical clock, procedural fragment shader fog, and real-time color-mix mechanics transitioning between morning daylight and night-grid off-peak states.</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+        </div>
+        <h3 class="card-title">Nimbus Liquid Navbar</h3>
+        <p class="card-desc">Featuring water drop spring physics with lead/lag kinetics, WebAudio synthesized water plips, and cursor wave tracking that smoothly glides between page sections as you scroll.</p>
+      </div>
+
+      <div class="glass-card">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </div>
+        <h3 class="card-title">Pure Binary PDF Output</h3>
+        <p class="card-desc">Direct PDF 1.4 binary synthesis inside the browser without third-party CDNs. Generates clean vector typography, barcodes, and official utility seals.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="footer-logo">
+      <svg viewBox="0 0 40 40" aria-hidden="true">
+        <g fill="#d8ee8e">
+          <path d="M22 2L9 22h9l-2 16 15-22h-10l3-14z"/>
+        </g>
+      </svg>
+      VoltEdge Power Management
+    </div>
+    <div class="footer-links">
+      <a href="#" id="footerGenBill">⚡ Generate Bill</a>
+      <a href="#secTariff" class="footer-scroll-link">Tariff Calculator</a>
+      <a href="#secGuide" class="footer-scroll-link">Billing Guide</a>
+      <a href="#secAbout" class="footer-scroll-link">About System</a>
+    </div>
+    <p>© 2026 VoltEdge Electricity Systems. Precision Metering & Billing Automation.</p>
+  </footer>
+</div>
+</main>
+
+<!-- Electricity Bill Modal -->
+<div class="modal-backdrop" id="billModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="bill-card">
+    <div class="bill-head">
+      <div class="bill-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d8ee8e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+        <h2 id="modalTitle">Electricity Bill Generator</h2>
+      </div>
+      <button class="close-btn" id="closeBillBtn" aria-label="Close modal">&times;</button>
+    </div>
+
+    <form id="billForm">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="consumerId">Consumer ID</label>
+          <input type="text" id="consumerId" name="consumerId" placeholder="e.g. EB-10492" required autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="meterNumber">Meter Number</label>
+          <input type="text" id="meterNumber" name="meterNumber" placeholder="e.g. MTR-8821" required autocomplete="off">
+        </div>
+        <div class="form-group full">
+          <label for="name">Consumer Name</label>
+          <input type="text" id="name" name="name" placeholder="e.g. Rahul Sharma" required autocomplete="name">
+        </div>
+        <div class="form-group full">
+          <label for="address">Address</label>
+          <input type="text" id="address" name="address" placeholder="e.g. 42 Solar Park, Green Valley" required autocomplete="street-address">
+        </div>
+        <div class="form-group">
+          <label for="units">Units Consumed (kWh)</label>
+          <input type="number" id="units" name="units" min="0" max="1000000" placeholder="e.g. 240" required>
+        </div>
+        <div class="form-group">
+          <label for="unitRate">Rate in Your Area (₹ / Unit)</label>
+          <input type="number" id="unitRate" name="unitRate" min="0.1" step="0.01" value="6.00" placeholder="e.g. 6.00" required>
+        </div>
+      </div>
+      <button type="submit" class="calc-submit" id="submitBillBtn">
+        <span>Calculate Bill</span>
+        <span>→</span>
+      </button>
+    </form>
+
+    <div class="receipt-box" id="billReceipt">
+      <div class="receipt-header">
+        <span class="receipt-badge">Bill Generated</span>
+        <div class="receipt-amount" id="resTotal">₹0.00</div>
+      </div>
+      <div class="receipt-details">
+        <div class="receipt-row">
+          <span>Consumer ID:</span>
+          <span id="resId">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>Name:</span>
+          <span id="resName">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>Meter No.:</span>
+          <span id="resMeter">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>Address:</span>
+          <span id="resAddress">-</span>
+        </div>
+        <div class="receipt-row">
+          <span>Units Consumed:</span>
+          <span id="resUnits">0 kWh</span>
+        </div>
+        <div class="receipt-row">
+          <span>Unit Rate Applied:</span>
+          <span id="resRate">₹6.00 / unit</span>
+        </div>
+        <div class="receipt-row">
+          <span>Energy Charge:</span>
+          <span id="resEnergy">₹0.00</span>
+        </div>
+        <div class="receipt-row">
+          <span>Fixed Charge:</span>
+          <span id="resFixed">₹50.00</span>
+        </div>
+        <div class="receipt-row total">
+          <span>Total Amount:</span>
+          <span id="resTotalRow">₹0.00</span>
+        </div>
+      </div>
+      <div class="receipt-actions">
+        <button type="button" class="receipt-btn print" id="printBillBtn">🖨️ Print</button>
+        <button type="button" class="receipt-btn new" id="newBillBtn">＋ Calculate Another</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Thermal Receipt Printer Overlay -->
+<div class="printer-overlay" id="printerOverlay" aria-modal="true" role="dialog">
+  <div class="printer-grain"></div>
+  <button type="button" class="printer-pdf-btn" id="downloadPdfBtn" aria-label="Download receipt as PDF">
+    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="7 10 12 15 17 10"></polyline>
+      <line x1="12" y1="15" x2="12" y2="3"></line>
+    </svg>
+    <span>Download as PDF</span>
+  </button>
+  <button type="button" class="printer-close-btn" id="closePrinterOverlay" aria-label="Close printer">&times;</button>
+  <button type="button" class="printer-sound-btn" id="printerSoundBtn" aria-label="Toggle sound" aria-pressed="false">
+    <svg id="soundIconOn" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+    <svg id="soundIconOff" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+  </button>
+
+  <div class="printer-stage">
+    <!-- Paper Clip Zone -->
+    <div class="printer-clip">
+      <div class="paper-strip" id="paperStrip" role="button" tabindex="0" aria-label="Receipt. Pull it or press Enter to tear it off." style="display:none"></div>
+    </div>
+
+    <!-- Flying Torn Strip Container -->
+    <div class="paper-flying" id="paperFlying" style="display:none"></div>
+
+    <!-- The Machine from above -->
+    <div class="printer-machine">
+      <div class="printer-chassis"></div>
+      <div class="printer-seam"></div>
+      <div class="printer-slot"></div>
+      <div class="printer-paper-lip" id="printerLip"></div>
+      <div class="printer-led" id="printerLed"></div>
+
+      <!-- 3D Red PRINT button -->
+      <button type="button" class="printer-btn" id="machinePrintBtn" aria-label="Print receipt">
+        <span class="printer-btn-inner">PRINT</span>
+      </button>
+
+      <span class="printer-brand" aria-hidden="true">voltage</span>
+    </div>
+
+    <!-- Serrated tear bar over the slot -->
+    <div class="printer-tear-bar"></div>
+
+    <!-- Instruction Hint -->
+    <div class="printer-hint" id="printerHint">Press print</div>
+  </div>
+</div>
+<script>
+/* VoltEdge Shader Splash / Loading Screen Controller */
+(function initVoltEdgeShaderLoader() {
+  const overlay = document.getElementById('loaderOverlay');
+  const canvas = document.getElementById('loaderCanvas');
+  const bar = document.getElementById('loaderBar');
+  const status = document.getElementById('loaderStatus');
+  const skipBtn = document.getElementById('loaderSkipBtn');
+  if (!overlay || !canvas) return;
+
+  const gl = canvas.getContext('webgl', { antialias: true, alpha: false });
+  let animId = null;
+  let isDismissed = false;
+
+  function dismiss() {
+    if (isDismissed) return;
+    isDismissed = true;
+    overlay.classList.add('is-hidden');
+    setTimeout(() => {
+      if (animId) cancelAnimationFrame(animId);
+      overlay.style.display = 'none';
+      window.removeEventListener('resize', resize);
+    }, 800);
+  }
+
+  if (!gl) {
+    setTimeout(dismiss, 1400);
+    return;
+  }
+
+  const vsSource = `
+    attribute vec2 position;
+    void main() {
+      gl_Position = vec4(position, 0.0, 1.0);
+    }
+  `;
+
+  const fsSource = `
+    #define TWO_PI 6.2831853072
+    #define PI 3.14159265359
+
+    precision highp float;
+    uniform vec2 resolution;
+    uniform float time;
+
+    void main(void) {
+      vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+      float t = time * 0.05;
+      float lineWidth = 0.002;
+
+      vec3 color = vec3(0.0);
+      for(int j = 0; j < 3; j++){
+        for(int i = 0; i < 5; i++){
+          color[j] += lineWidth * float(i * i) / abs(fract(t - 0.01 * float(j) + float(i) * 0.01) * 5.0 - length(uv) + mod(uv.x + uv.y, 0.2));
+        }
+      }
+      
+      gl_FragColor = vec4(color[0], color[1], color[2], 1.0);
+    }
+  `;
+
+  function createShader(gl, type, source) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+      gl.deleteShader(s);
+      return null;
+    }
+    return s;
+  }
+
+  const vs = createShader(gl, gl.VERTEX_SHADER, vsSource);
+  const fs = createShader(gl, gl.FRAGMENT_SHADER, fsSource);
+  if (!vs || !fs) {
+    setTimeout(dismiss, 1400);
+    return;
+  }
+
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    setTimeout(dismiss, 1400);
+    return;
+  }
+
+  gl.useProgram(program);
+
+  const quadBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+    -1, -1,
+     1, -1,
+    -1,  1,
+    -1,  1,
+     1, -1,
+     1,  1
+  ]), gl.STATIC_DRAW);
+
+  const posAttr = gl.getAttribLocation(program, 'position');
+  gl.enableVertexAttribArray(posAttr);
+  gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0);
+
+  const uResolution = gl.getUniformLocation(program, 'resolution');
+  const uTime = gl.getUniformLocation(program, 'time');
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = Math.round(window.innerWidth * dpr);
+    const height = Math.round(window.innerHeight * dpr);
+    if (canvas.width !== width || canvas.height !== height) {
+      canvas.width = width;
+      canvas.height = height;
+      gl.viewport(0, 0, width, height);
+    }
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let timeVal = 1.0;
+  function render() {
+    if (isDismissed) return;
+    timeVal += 0.05;
+    gl.uniform2f(uResolution, canvas.width, canvas.height);
+    gl.uniform1f(uTime, timeVal);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    animId = requestAnimationFrame(render);
+  }
+  animId = requestAnimationFrame(render);
+
+  setTimeout(() => {
+    if (bar) bar.style.width = '38%';
+    if (status) status.textContent = 'Connecting to Regional Power Grids...';
+  }, 400);
+
+  setTimeout(() => {
+    if (bar) bar.style.width = '78%';
+    if (status) status.textContent = 'Calibrating Energy Tariff Engine...';
+  }, 1150);
+
+  setTimeout(() => {
+    if (bar) bar.style.width = '100%';
+    if (status) status.textContent = 'VoltEdge Systems Online';
+  }, 1850);
+
+  // Auto transition to home screen after 2.4s
+  setTimeout(dismiss, 2400);
+
+  if (skipBtn) skipBtn.addEventListener('click', (e) => { e.stopPropagation(); dismiss(); });
+  overlay.addEventListener('click', dismiss);
+})();
+
+const root=document.documentElement.style,$=id=>document.getElementById(id);
+const calm=matchMedia('(prefers-reduced-motion:reduce)').matches;
+const SINK=240,RISE=820,DEPTH=.27;
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const smooth=(a,b,x)=>{x=clamp((x-a)/(b-a));return x*x*(3-2*x)};
+let night=1,target=1,from=1,start=-1e9,queued=null,swapped=true,k=1;
+
+const cv=$('fog'),gl=cv.getContext('webgl2',{alpha:true,premultipliedAlpha:true,antialias:false});
+let U={};
+if(gl){
+  const vs=`#version 300 es
+  void main(){vec2 p=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(p*2.-1.,0,1);}`;
+  const fs=`#version 300 es
+  precision highp float;
+  uniform vec2 R;uniform float T,S,K;out vec4 O;
+  float h(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
+  float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+    return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+vec2(1,1)),f.x),f.y);}
+  float fbm(vec2 p){float a=.5,s=0.;mat2 m=mat2(1.6,1.2,-1.2,1.6);p=mat2(.8,.6,-.6,.8)*p+5.3;for(int i=0;i<5;i++){s+=a*n(p);p=m*p;a*=.5;}return s;}
+  void main(){
+    vec2 uv=gl_FragCoord.xy/R;uv.y=1.-uv.y;
+    float asp=R.x/R.y;vec2 p=vec2(uv.x*asp,uv.y);
+    float t=T*.05;
+    vec2 w=vec2(fbm(p*1.3+vec2(t,-t*.6)),fbm(p*1.3+vec2(-t*.8,t)+7.));
+    float d=fbm(p*1.9+w*1.7+vec2(t*1.6,-t*1.1+S*.5));
+    float e=fbm(p*.9-w+vec2(-t,t*.5)+3.);
+    float low=smoothstep(.70,1.04,uv.y+(d-.5)*.34);
+    float side=smoothstep(.2,.0,uv.x+(e-.5)*.28)+smoothstep(.8,1.,uv.x+(e-.5)*.28);
+    side*=smoothstep(.25,.6,uv.y)*.2;
+    float wisps=smoothstep(.5,.78,d)*smoothstep(.22,.5,uv.y)*smoothstep(.86,.6,uv.y)*.18;
+    float rest=clamp(low+side+wisps,0.,1.);
+    float front=1.02-S*.68;
+    float rise=smoothstep(front-.02,front+.26,uv.y+(d-.5)*.5);
+    float haze=S*(.3+.46*d);
+    float a=clamp(max(rest,max(rise*.97,haze)),0.,1.);
+    vec3 dayA=vec3(.97,.93,.84),dayB=vec3(.79,.78,.71);
+    vec3 nitA=vec3(.40,.45,.57),nitB=vec3(.15,.19,.29);
+    vec3 c=mix(mix(dayB,dayA,d*1.15),mix(nitB,nitA,d*1.1),K);
+    float porch=exp(-dot((uv-vec2(.72,.74))*vec2(1.7,2.6),(uv-vec2(.72,.74))*vec2(1.7,2.6))*3.2);
+    c=mix(c,vec3(.86,.55,.27),K*porch*.42*(1.-S));
+    O=vec4(c*a,a);
+  }`;
+  const sh=(t,s)=>{const o=gl.createShader(t);gl.shaderSource(o,s);gl.compileShader(o);
+    if(!gl.getShaderParameter(o,gl.COMPILE_STATUS))console.error(gl.getShaderInfoLog(o));return o};
+  const pr=gl.createProgram();gl.attachShader(pr,sh(gl.VERTEX_SHADER,vs));gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,fs));
+  gl.linkProgram(pr);gl.useProgram(pr);
+  for(const u of['R','T','S','K'])U[u]=gl.getUniformLocation(pr,u);
+}
+function size(){
+  if(!gl)return;
+  const w=Math.round(Math.min(innerWidth,960)),h=Math.round(w*innerHeight/innerWidth);
+  if(cv.width!==w||cv.height!==h){cv.width=w;cv.height=h;gl.viewport(0,0,w,h)}
+}
+addEventListener('resize',size);size();
+
+function show(n){
+  $('setM').classList.toggle('is-on',!n);$('setN').classList.toggle('is-on',!!n);
+}
+function pick(n){
+  if(n===target&&queued===null)return;
+  $('bm').setAttribute('aria-pressed',!n);$('bn').setAttribute('aria-pressed',!!n);
+  if(calm){target=night=n;k=n;show(n);return}
+  if(animating)queued=n;else begin(n,clock);
+}
+let animating=false,clock=0;
+function begin(n,now){target=n;from=k;start=now;swapped=false;animating=true}
+$('bm').onclick=()=>pick(0);$('bn').onclick=()=>pick(1);
+
+function frame(now){
+  clock=now;
+  const d=now-start;let y=0,s=0,dip=0,k2=k;
+  if(animating){
+    if(d<SINK){const x=d/SINK;y=x*x*(3-2*x)*DEPTH}
+    else{
+      if(!swapped){swapped=true;night=target;show(target)}
+      const x=clamp((d-SINK)/RISE);y=Math.pow(1-x,3.4)*DEPTH;
+    }
+    s=smooth(0,SINK*.92,d)*(1-smooth(SINK+70,SINK+RISE*.92,d));
+    dip=smooth(30,190,d)*(1-smooth(330,720,d));
+    k=from+(target-from)*smooth(120,520,d);
+    k2=from+(target-from)*smooth(340,760,d);
+    if(d>=SINK+RISE){animating=false;k=k2=target;y=s=dip=0;if(queued!==null&&queued!==target){const q=queued;queued=null;begin(q,now)}else queued=null}
+  }
+  root.setProperty('--sink',(y*innerHeight).toFixed(1)+'px');
+  root.setProperty('--k',k.toFixed(3));root.setProperty('--k2',k2.toFixed(3));root.setProperty('--dip',dip.toFixed(3));
+  if(gl){gl.uniform2f(U.R,cv.width,cv.height);gl.uniform1f(U.T,now/1000);gl.uniform1f(U.S,s);gl.uniform1f(U.K,k);gl.drawArrays(gl.TRIANGLES,0,3)}
+}
+function loop(t){frame(t);requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+
+// Electricity Bill Generator Modal Logic
+const modal=$('billModal'),openBtn=$('openBillBtn'),closeBtn=$('closeBillBtn');
+const form=$('billForm'),receipt=$('billReceipt'),newBtn=$('newBillBtn'),printBtn=$('printBillBtn');
+
+function openModal(e){if(e)e.preventDefault();modal.classList.add('is-open');$('consumerId').focus()}
+function closeModal(){modal.classList.remove('is-open')}
+
+openBtn.onclick=openModal;
+closeBtn.onclick=closeModal;
+modal.onclick=e=>{if(e.target===modal)closeModal()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&modal.classList.contains('is-open'))closeModal()});
+
+const tariffInfoBtn=$('openCasesBtn');
+const showTariffAlert = e => {
+  if(e) e.preventDefault();
+  alert("⚡ Electricity Tariff Guide:\n• Custom Rate: Enter your area's electricity rate (default: ₹6.00/unit)\n• Fixed Maintenance Charge: ₹50.00 per bill\n\nFormula:\nTotal Bill = (Units Consumed × Rate in Your Area) + ₹50.00\n\nYou can customize your local unit rate in the Generate Bill form!");
+};
+if(tariffInfoBtn) tariffInfoBtn.onclick = showTariffAlert;
+
+/* Nimbus UI · Liquid Navbar Controller */
+(function initLiquidNavbar() {
+  const PAD = 14;
+  const nav = document.getElementById('topNav');
+  const canvas = document.getElementById('nimbusCanvas');
+  const drop = document.getElementById('nimbusDrop');
+  if (!nav || !canvas) return;
+
+  const items = Array.from(nav.querySelectorAll('.nimbus-item'));
+  let activeIndex = 0;
+  let audioCtx = null;
+
+  function plip() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!audioCtx) audioCtx = new AC();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const t = audioCtx.currentTime;
+      const o = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      o.type = "sine";
+      o.frequency.setValueAtTime(420 + Math.random() * 80, t);
+      o.frequency.exponentialRampToValueAtTime(1500, t + 0.07);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.16, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+      o.connect(g).connect(audioCtx.destination);
+      o.start(t);
+      o.stop(t + 0.18);
+    } catch(e) {}
+  }
+
+  const VERT = `attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}`;
+  const FRAG = `precision highp float;
+uniform vec2 uRes;uniform float uDpr;uniform float uTime;uniform vec4 uPill;
+uniform vec4 uBlob[6];uniform float uSy[6];uniform vec4 uRip[6];uniform vec3 uMouse;uniform float uDark;uniform float uAmb;
+float sdRB(vec2 p,vec2 b,float r){vec2 q=abs(p)-b+r;return length(max(q,0.))+min(max(q.x,q.y),0.)-r;}
+float sdCap(vec2 p,vec4 B,float sy){p-=B.xy;p.y/=sy;p.x=max(abs(p.x)-B.z,0.);return(length(p)-B.w)*min(1.,sy);}
+float smin(float a,float b,float k){float h=clamp(.5+.5*(b-a)/k,0.,1.);return mix(b,a,h)-k*h*(1.-h);}
+float dropD(vec2 p){float d=1e4;for(int i=0;i<6;i++){if(uBlob[i].w>.5){d=smin(d,sdCap(p,uBlob[i],uSy[i]),13.);}}return d;}
+float pillD(vec2 p){vec2 h=uPill.zw*.5;return sdRB(p-uPill.xy-h,h,h.y);}
+float lens(float d,float w){float t=clamp(-d/w,0.,1.);return sqrt(1.-(1.-t)*(1.-t));}
+float waves(vec2 p){float w=0.;
+ for(int i=0;i<6;i++){vec4 R=uRip[i];if(R.w>0.){float x=length(p-R.xy)-R.z*240.;w+=R.w*exp(-R.z*1.7)*sin(x*.3)*exp(-x*x/700.);}}
+ vec2 m=p-uMouse.xy;w+=uMouse.z*3.6*exp(-dot(m,m)/1000.);
+ w+=uAmb*(sin(p.x*.05+uTime*1.2)*.45+sin(p.x*.13-uTime*.85+p.y*.2)*.25);return w;}
+float H(vec2 p){float dp=pillD(p);return lens(dp,uPill.w*.36)*2.4+lens(dropD(p),11.)*7.5+waves(p)*smoothstep(0.,7.,-dp);}
+float caus(vec2 p,float t){vec2 q=p;float c=0.;for(int i=0;i<3;i++){q+=vec2(sin(q.y*1.1+t),cos(q.x*1.3-t*.7))*.6;c+=1./(1.+16.*abs(sin(q.x)*sin(q.y)));}return c/3.;}
+void main(){
+ vec2 p=vec2(gl_FragCoord.x,uRes.y*uDpr-gl_FragCoord.y)/uDpr;
+ float dp=pillD(p);float dd=dropD(p);
+ float h0=H(p);vec3 n=normalize(vec3(h0-H(p+vec2(1.,0.)),h0-H(p+vec2(0.,1.)),1.));
+ vec3 V=vec3(0.,0.,1.);
+ float spec=pow(max(dot(reflect(-normalize(vec3(-.45,-.8,.85)),n),V),0.),70.);
+ float spec2=pow(max(dot(reflect(-normalize(vec3(.6,.75,.7)),n),V),0.),22.)*.3;
+ float fres=clamp((1.-n.z)*4.,0.,1.);
+ vec3 irid=.5+.5*cos(6.2831*(vec3(0.,.33,.67)+fres*.85+p.x*.0028+uTime*.035));
+ float pm=smoothstep(1.,-1.,dp);float dm=smoothstep(1.,-1.,dd)*smoothstep(1.,-2.,dp);
+ float sh=smoothstep(9.,-9.,dropD(p-vec2(0.,5.)))*(1.-dm)*pm*(.11+.07*uDark);
+ vec3 c=vec3(0.,.14,.36)*sh;float a=sh;
+ float pa=clamp(pm*(fres*.5+spec*.9+spec2),0.,1.);
+ c=mix(vec3(1.),irid,.5*fres)*pa+c*(1.-pa);a=pa+a*(1.-pa);
+ float th=lens(dd,11.);
+ float cs=caus((p+n.xy*th*18.)*.085,uTime*.9);
+ vec3 tint=mix(vec3(.80,.95,1.),vec3(.55,.82,1.),uDark);
+ float rim=dm*(1.-smoothstep(0.,8.,-dd));
+ float cres=dm*smoothstep(.12,.55,dot(n.xy,normalize(vec2(.55,.85))))*smoothstep(0.,3.,-dd);
+ float body=.5+.5*clamp(-n.y*3.,-1.,1.);
+ float da=dm*(.26+.14*body)*(1.-.35*uDark);vec3 dc=mix(tint,vec3(1.),body*.6);
+ float la=rim*.22;vec3 lc=mix(vec3(0.,.42,.78),vec3(.1,.55,.95),uDark);dc=lc*la+dc*da*(1.-la);da=la+da*(1.-la);
+ la=clamp(cres*.7+smoothstep(.6,1.,cs)*.28*th*dm,0.,1.);dc=vec3(1.)*la+dc*(1.-la);da=la+da*(1.-la);
+ la=clamp(dm*(spec*1.2+spec2*.5),0.,1.);dc=vec3(1.)*la+dc*(1.-la);da=la+da*(1.-la);
+ la=dm*smoothstep(-2.,0.,dd)*.4;dc=mix(vec3(1.),irid,.35)*la+dc*(1.-la);da=la+da*(1.-la);
+ c=dc+c*(1.-da);a=da+a*(1.-da);
+ gl_FragColor=vec4(c,a);
+}`;
+
+  function initGL(cv) {
+    const gl = cv.getContext("webgl", { premultipliedAlpha: true, alpha: true, antialias: false });
+    if (!gl) return null;
+    const sh = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+    };
+    const vs = sh(gl.VERTEX_SHADER, VERT);
+    const fs = sh(gl.FRAGMENT_SHADER, FRAG);
+    if (!vs || !fs) return null;
+    const p = gl.createProgram();
+    gl.attachShader(p, vs);
+    gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) return null;
+    gl.useProgram(p);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(p, "a");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+    const u = {};
+    for (const n of ["uRes", "uDpr", "uTime", "uPill", "uBlob", "uSy", "uRip", "uMouse", "uDark", "uAmb"]) {
+      u[n] = gl.getUniformLocation(p, n);
+    }
+    return { gl, u };
+  }
+
+  const st = {
+    a: { x: 0, v: 0 },
+    b: { x: 0, v: 0 },
+    sy: { s: 1, v: 0 },
+    lead: 0,
+    lagFrom: 0,
+    sats: [],
+    rips: [],
+    t: { x: 0, cy: 0, q: 0, r: 20 },
+    q: 0,
+    mouse: { x: 0, y: 0, s: 0, on: false },
+    moving: false,
+    split: false,
+    ready: false,
+    w: 0,
+    h: 0,
+    visible: true,
+    reduce: false,
+    raf: 0,
+    last: 0,
+    time: 0,
+    glc: null
+  };
+
+  st.reduce = !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  st.glc = initGL(canvas);
+  if (!st.glc) nav.setAttribute("data-gl", "off");
+
+  function draw() {
+    const s = st;
+    const T = s.t;
+    const sep = Math.abs(s.a.x - s.b.x);
+    const thin = Math.min(sep / (2 * (s.q + T.r) || 1), 1);
+    const r = T.r * (1 - 0.3 * thin);
+    if (s.glc) {
+      const { gl: g, u } = s.glc;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      g.viewport(0, 0, g.drawingBufferWidth, g.drawingBufferHeight);
+      g.uniform2f(u.uRes, s.w + PAD * 2, s.h + PAD * 2);
+      g.uniform1f(u.uDpr, dpr);
+      g.uniform1f(u.uTime, s.time);
+      g.uniform4f(u.uPill, PAD, PAD, s.w, s.h);
+      const blobs = new Float32Array(24);
+      const sy = new Float32Array(6).fill(1);
+      const head = s.lead === 0 ? s.a : s.b, tail = s.lead === 0 ? s.b : s.a;
+      blobs.set([head.x, T.cy, s.q * (1 - 0.25 * thin), T.r * (1 - 0.12 * thin), tail.x, T.cy, s.q * (1 - 0.8 * thin), T.r * (1 - 0.5 * thin)], 0);
+      sy[0] = sy[1] = s.sy.s;
+      s.sats.slice(0, 4).forEach((d, i) => blobs.set([d.x, d.y, 0, d.r], 8 + i * 4));
+      g.uniform4fv(u.uBlob, blobs);
+      g.uniform1fv(u.uSy, sy);
+      const rips = new Float32Array(24);
+      s.rips.slice(-6).forEach((p, i) => rips.set([p.x, p.y, p.age, p.amp], i * 4));
+      g.uniform4fv(u.uRip, rips);
+      g.uniform3f(u.uMouse, s.mouse.x, s.mouse.y, s.mouse.s);
+      const kVal = parseFloat(document.documentElement.style.getPropertyValue('--k')) || 1.0;
+      g.uniform1f(u.uDark, kVal);
+      g.uniform1f(u.uAmb, s.reduce ? 0 : 1);
+      g.clearColor(0, 0, 0, 0);
+      g.clear(g.COLOR_BUFFER_BIT);
+      g.drawArrays(g.TRIANGLES, 0, 3);
+    } else if (drop) {
+      const left = Math.min(s.a.x, s.b.x) - s.q - r - PAD;
+      const width = sep + 2 * (s.q + r);
+      drop.style.width = `${width}px`;
+      drop.style.transform = `translateX(${left}px) scaleY(${s.sy.s})`;
+    }
+  }
+
+  function step(dt, now) {
+    const s = st;
+    const T = s.t;
+    s.time += dt;
+    s.q += (T.q - s.q) * Math.min(1, dt * 12);
+    const bodies = [s.a, s.b];
+    let still = true;
+    if (s.reduce) {
+      s.a.x = s.b.x = T.x; s.a.v = s.b.v = 0; s.sy.s = 1; s.sats = [];
+    } else {
+      bodies.forEach((B, i) => {
+        const lead = i === s.lead;
+        const kSpring = lead ? 210 : 72;
+        const cDamp = lead ? 25 : 13;
+        const f = !lead && now < s.lagFrom ? 0.08 : 1;
+        B.v += (kSpring * (T.x - B.x) - cDamp * B.v) * dt * f;
+        B.x += B.v * dt;
+        const lo = PAD + 6 + s.q + T.r - 3, hi = PAD + s.w - 6 - s.q - T.r + 3;
+        if (B.x < lo || B.x > hi) {
+          s.sy.v -= Math.min(Math.abs(B.v), 900) * 0.0016;
+          B.x = Math.max(lo, Math.min(hi, B.x));
+          B.v *= -0.25;
+        }
+        if (Math.abs(T.x - B.x) > 0.3 || Math.abs(B.v) > 3) still = false;
+      });
+      const L = bodies[s.lead];
+      const syT = 1 - 0.2 * Math.min(Math.abs(L.v) / 1500, 1);
+      s.sy.v += (280 * (syT - s.sy.s) - 9 * s.sy.v) * dt;
+      s.sy.s += s.sy.v * dt;
+      if (Math.abs(s.sy.s - 1) > 0.002 || Math.abs(s.sy.v) > 0.02) still = false;
+      const sep = Math.abs(s.a.x - s.b.x);
+      const r = T.r * (1 - 0.3 * Math.min(sep / (2 * (T.q + T.r) || 1), 1));
+      if (!s.split && s.moving && sep - 2 * T.q - 2 * r > -6) {
+        s.split = true;
+        const lo = bodies[1 - s.lead], hi = bodies[s.lead];
+        [0.3, 0.5, 0.72].forEach((t, j) => {
+          s.sats.push({
+            x: lo.x + (hi.x - lo.x) * t + (Math.random() - 0.5) * 6,
+            y: T.cy + (Math.random() - 0.5) * 10,
+            vx: (lo.v + hi.v) * 0.45,
+            vy: (Math.random() - 0.5) * 60,
+            r: 5 + Math.random() * 3 - j * 0.5,
+            k: 70 + Math.random() * 90,
+          });
+        });
+      }
+      s.sats = s.sats.filter((d) => {
+        d.vx += (d.k * (T.x - d.x) - 9 * d.vx) * dt;
+        d.vy += (90 * (T.cy - d.y) - 7 * d.vy) * dt;
+        d.x += d.vx * dt;
+        d.y += d.vy * dt;
+        d.x = Math.max(PAD + 8 + d.r, Math.min(PAD + s.w - 8 - d.r, d.x));
+        d.y = Math.max(T.cy - T.r + d.r, Math.min(T.cy + T.r - d.r, d.y));
+        if (Math.abs(T.x - d.x) < T.q + T.r * 0.5) d.r -= dt * 26;
+        return d.r > 0.6;
+      });
+      if (s.sats.length) still = false;
+    }
+    if (s.moving && still) {
+      s.moving = false;
+      if (s.split || !s.reduce) s.rips.push({ x: T.x, y: T.cy, age: 0, amp: s.split ? 1.2 : 0.7 });
+    }
+    s.rips.forEach((p) => (p.age += dt));
+    s.rips = s.rips.filter((p) => p.age < 2.4);
+    const target = s.mouse.on ? 1 : 0;
+    s.mouse.s += (target - s.mouse.s) * Math.min(1, dt * 7);
+  }
+
+  function loopNav() {
+    if (st.raf) return;
+    st.last = performance.now();
+    const tick = (now) => {
+      const dt = Math.min((now - st.last) / 1000, 1 / 30);
+      st.last = now;
+      step(dt, now);
+      draw();
+      const busy = st.moving || st.rips.length || st.sats.length || st.mouse.s > 0.01;
+      if (st.visible && (!st.reduce || busy)) st.raf = requestAnimationFrame(tick);
+      else st.raf = 0;
+    };
+    st.raf = requestAnimationFrame(tick);
+  }
+
+  function measure() {
+    const el = items[activeIndex];
+    if (!nav || !el) return;
+    st.w = nav.offsetWidth;
+    st.h = nav.offsetHeight;
+    const T = st.t;
+    T.r = el.offsetHeight / 2;
+    T.q = Math.max(0, el.offsetWidth / 2 - T.r);
+    T.cy = PAD + el.offsetTop + el.offsetHeight / 2;
+    const nx = PAD + el.offsetLeft + el.offsetWidth / 2;
+    if (!st.ready) {
+      st.a.x = st.b.x = nx;
+      st.q = T.q;
+      st.ready = true;
+    } else if (Math.abs(nx - T.x) > 0.5) {
+      st.lead = Math.abs(nx - st.a.x) <= Math.abs(nx - st.b.x) ? 0 : 1;
+      st.lagFrom = performance.now() + 70;
+      st.moving = true;
+      st.split = false;
+    }
+    T.x = nx;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const W = st.w + PAD * 2, Hh = st.h + PAD * 2;
+    if (canvas.width !== Math.round(W * dpr) || canvas.height !== Math.round(Hh * dpr)) {
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(Hh * dpr);
+      canvas.style.width = `${W}px`;
+      canvas.style.height = `${Hh}px`;
+    }
+    loopNav();
+  }
+
+  function localCoord(clientX, clientY) {
+    const r = nav.getBoundingClientRect();
+    return { x: clientX - r.left + PAD, y: clientY - r.top + PAD };
+  }
+
+  function triggerFx(btn, fxKind) {
+    const ico = btn.querySelector('.nv-ico');
+    if (!ico) return;
+    ico.removeAttribute('data-fx');
+    void ico.offsetWidth;
+    ico.setAttribute('data-fx', fxKind);
+  }
+
+  window.liquidNavbarSelect = function(idx) {
+    if (idx < 0 || idx >= items.length) return;
+    activeIndex = idx;
+    items.forEach((item, i) => {
+      if (i === idx) {
+        item.setAttribute('aria-current', 'page');
+      } else {
+        item.removeAttribute('aria-current');
+      }
+    });
+
+    const btn = items[idx];
+    const ico = btn.querySelector('.nv-ico');
+    const fxKind = ico ? (ico.getAttribute('data-initial-fx') || ico.getAttribute('data-fx') || 'pop') : 'pop';
+    triggerFx(btn, fxKind);
+    plip();
+
+    if (ico) {
+      const b = ico.getBoundingClientRect();
+      const c = localCoord(b.left + b.width / 2, b.top + b.height / 2);
+      if (fxKind === 'drop') setTimeout(() => { st.rips.push({ x: c.x, y: st.t.cy, age: 0, amp: 1.4 }); loopNav(); }, 430);
+      if (fxKind === 'plane') { st.rips.push({ x: c.x, y: c.y, age: 0, amp: 0.6 }); loopNav(); }
+    }
+
+    measure();
+  };
+
+  items.forEach((item, idx) => {
+    const ico = item.querySelector('.nv-ico');
+    if (ico && !ico.getAttribute('data-initial-fx')) {
+      ico.setAttribute('data-initial-fx', ico.getAttribute('data-fx') || 'pop');
+    }
+    const sectionTargets = [null, 'secTariff', 'secGuide', 'secAbout'];
+    item.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.liquidNavbarSelect(idx);
+      if (idx === 0) {
+        openModal();
+      } else {
+        const targetId = sectionTargets[idx];
+        if (targetId) {
+          const el = document.getElementById(targetId);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    });
+  });
+
+  nav.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const p = localCoord(e.clientX, e.clientY);
+    st.mouse.x = p.x;
+    st.mouse.y = p.y;
+    st.mouse.on = true;
+    loopNav();
+  });
+
+  nav.addEventListener('pointerleave', () => {
+    st.mouse.on = false;
+    loopNav();
+  });
+
+  window.addEventListener('resize', () => {
+    st.ready = false;
+    measure();
+  });
+
+  setTimeout(measure, 60);
+  setTimeout(measure, 350);
+})();
+
+// Scroll spy & smooth scroll navigation
+window.addEventListener('scroll', () => {
+  const bar = document.querySelector('.bar');
+  if (bar) {
+    if (window.scrollY > 30) bar.classList.add('is-scrolled');
+    else bar.classList.remove('is-scrolled');
+  }
+  if (window.scrollY < 260 && window.liquidNavbarSelect) {
+    window.liquidNavbarSelect(0);
+  }
+}, { passive: true });
+
+const sectionSpyTargets = [
+  { id: 'secTariff', idx: 1 },
+  { id: 'secGuide', idx: 2 },
+  { id: 'secAbout', idx: 3 }
+];
+
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && window.scrollY >= 260) {
+      const match = sectionSpyTargets.find(s => s.id === entry.target.id);
+      if (match && window.liquidNavbarSelect) {
+        window.liquidNavbarSelect(match.idx);
+      }
+    }
+  });
+}, { threshold: 0.25, rootMargin: "-80px 0px -40% 0px" });
+
+sectionSpyTargets.forEach(s => {
+  const el = document.getElementById(s.id);
+  if (el) sectionObserver.observe(el);
+});
+
+// Footer links smooth scroll
+document.querySelectorAll('.footer-scroll-link').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const id = link.getAttribute('href').replace('#', '');
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+
+const footGen = document.getElementById('footerGenBill');
+if (footGen) {
+  footGen.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (window.liquidNavbarSelect) window.liquidNavbarSelect(0);
+    openModal();
+  });
+}
+
+if (tariffInfoBtn) {
+  tariffInfoBtn.onclick = (e) => {
+    e.preventDefault();
+    if (window.liquidNavbarSelect) window.liquidNavbarSelect(1);
+    document.getElementById('secTariff')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+}
+
+// Section Live Interactive Tariff Calculator
+(function initSectionTariffCalc() {
+  const slider = document.getElementById('sliderUnits');
+  const inputRate = document.getElementById('inputLiveRate');
+  const valUnitsDisplay = document.getElementById('valUnitsDisplay');
+  const valRateDisplay = document.getElementById('valRateDisplay');
+  const sumUnits = document.getElementById('liveSumUnits');
+  const sumRate = document.getElementById('liveSumRate');
+  const sumEnergy = document.getElementById('liveSumEnergy');
+  const sumTotal = document.getElementById('liveSumTotal');
+
+  if (!slider || !inputRate) return;
+
+  function update() {
+    const units = Math.max(0, parseFloat(slider.value) || 0);
+    const rate = Math.max(0, parseFloat(inputRate.value) || 0);
+    const energy = units * rate;
+    const fixed = 50.00;
+    const total = energy + fixed;
+
+    if (valUnitsDisplay) valUnitsDisplay.textContent = units + ' kWh';
+    if (valRateDisplay) valRateDisplay.textContent = '₹' + rate.toFixed(2) + ' / unit';
+    if (sumUnits) sumUnits.textContent = units + ' kWh';
+    if (sumRate) sumRate.textContent = '₹' + rate.toFixed(2) + ' / unit';
+    if (sumEnergy) sumEnergy.textContent = '₹' + energy.toFixed(2);
+    if (sumTotal) sumTotal.textContent = '₹' + total.toFixed(2);
+  }
+
+  slider.addEventListener('input', update);
+  inputRate.addEventListener('input', update);
+  update();
+})();
+
+if (openBtn) {
+  openBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (window.liquidNavbarSelect) window.liquidNavbarSelect(0);
+    openModal();
+  });
+}
+
+// Dynamic regional tariff calculation
+function calculateTariffFallback(units, rate = 6.00){
+  const ec = units * rate;
+  const fc = 50.00;
+  return {unitRate:rate.toFixed(2),energyCharge:ec.toFixed(2),fixedCharge:fc.toFixed(2),totalAmount:(ec+fc).toFixed(2)};
+}
+
+let activeBillData = null;
+
+form.onsubmit=async e=>{
+  e.preventDefault();
+  const consumerId=$('consumerId').value.trim();
+  const meterNumber=$('meterNumber').value.trim();
+  const name=$('name').value.trim();
+  const address=$('address').value.trim();
+  const units=parseInt($('units').value,10);
+  const unitRate=parseFloat($('unitRate').value) || 6.00;
+
+  if(isNaN(units)||units<0){
+    alert('Please enter a valid positive units value.');
+    return;
+  }
+  if(isNaN(unitRate)||unitRate<=0){
+    alert('Please enter a valid unit rate (₹/unit) greater than 0.');
+    return;
+  }
+
+  let billData=null;
+  try{
+    const params=new URLSearchParams({
+      consumerId,name,address,meterNumber,
+      units:String(units),
+      unitRate:String(unitRate)
+    });
+    const res=await fetch('/api/calculate',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded; charset=UTF-8'},
+      body:params.toString()
+    });
+    if(res.ok){
+      billData=await res.json();
+    }
+  }catch(err){
+    console.warn('Backend calculate failed, using fallback:',err);
+  }
+
+  if(!billData){
+    const fb=calculateTariffFallback(units, unitRate);
+    billData={consumerId,name,address,meterNumber,units,unitRate:fb.unitRate,energyCharge:fb.energyCharge,fixedCharge:fb.fixedCharge,totalAmount:fb.totalAmount};
+  }
+
+  activeBillData = billData;
+
+  $('resId').textContent=billData.consumerId;
+  $('resName').textContent=billData.name;
+  $('resMeter').textContent=billData.meterNumber;
+  $('resAddress').textContent=billData.address;
+  $('resUnits').textContent=billData.units+' kWh';
+  $('resRate').textContent='₹'+parseFloat(billData.unitRate || unitRate).toFixed(2)+' / unit';
+  $('resEnergy').textContent='₹'+parseFloat(billData.energyCharge).toFixed(2);
+  $('resFixed').textContent='₹'+parseFloat(billData.fixedCharge).toFixed(2);
+  $('resTotal').textContent='₹'+parseFloat(billData.totalAmount).toFixed(2);
+  $('resTotalRow').textContent='₹'+parseFloat(billData.totalAmount).toFixed(2);
+
+  form.style.display='none';
+  receipt.classList.add('is-active');
+};
+
+newBtn.onclick=()=>{
+  form.reset();
+  form.style.display='block';
+  receipt.classList.remove('is-active');
+  $('consumerId').focus();
+};
+
+/* -------------------------------------------------------------
+ * WEBAUDIO SYNTHESIZER FOR THERMAL PRINTER
+ * ----------------------------------------------------------- */
+let audioCtx = null;
+const getAudio = () => (audioCtx ??= new (window.AudioContext || window.webkitAudioContext)());
+let masterGain = null;
+let soundMuted = false;
+
+const globalSound = () => {
+  const c = getAudio();
+  if (!masterGain) {
+    masterGain = c.createGain();
+    masterGain.gain.value = soundMuted ? 0 : 1;
+    masterGain.connect(c.destination);
+  }
+  return masterGain;
+};
+
+function tone(freq, dur, o = {}) {
+  const c = getAudio();
+  const t = c.currentTime + (o.at || 0);
+  const osc = c.createOscillator();
+  const g = c.createGain();
+  osc.type = o.type || "sine";
+  osc.frequency.setValueAtTime(freq, t);
+  if (o.to) osc.frequency.exponentialRampToValueAtTime(o.to, t + dur);
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(o.gain || 0.15, t + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  osc.connect(g).connect(globalSound());
+  osc.start(t);
+  osc.stop(t + dur + 0.02);
+}
+
+function noise(dur, o = {}) {
+  const c = getAudio();
+  const t = c.currentTime + (o.at || 0);
+  const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  const src = c.createBufferSource();
+  src.buffer = buf;
+  const f = c.createBiquadFilter();
+  f.type = o.type || "lowpass";
+  f.frequency.value = o.freq || 800;
+  const g = c.createGain();
+  g.gain.setValueAtTime(o.gain || 0.3, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(f).connect(g).connect(globalSound());
+  src.start(t);
+}
+
+const sfx = {
+  unlock: () => {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  },
+  button: () => {
+    noise(0.02, { freq: 1300, type: "bandpass", gain: 0.6 });
+    tone(230, 0.05, { gain: 0.08, to: 160 });
+  },
+  feed: (dur) => {
+    const c = getAudio();
+    const t = c.currentTime;
+    const out = c.createGain();
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.exponentialRampToValueAtTime(0.06, t + 0.06);
+    out.gain.setValueAtTime(0.06, t + Math.max(0.07, dur - 0.1));
+    out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    out.connect(globalSound());
+
+    const chop = c.createGain();
+    chop.gain.value = 0.58;
+    const lfo = c.createOscillator();
+    lfo.type = "square";
+    lfo.frequency.value = 34;
+    const depth = c.createGain();
+    depth.gain.value = 0.42;
+    lfo.connect(depth).connect(chop.gain);
+    chop.connect(out);
+
+    const motor = c.createOscillator();
+    motor.type = "sawtooth";
+    motor.frequency.setValueAtTime(290, t);
+    motor.frequency.linearRampToValueAtTime(320, t + dur);
+    const body = c.createBiquadFilter();
+    body.type = "bandpass";
+    body.frequency.value = 1300;
+    body.Q.value = 1.4;
+    motor.connect(body).connect(chop);
+
+    const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const hiss = c.createBufferSource();
+    hiss.buffer = buf;
+    const air = c.createBiquadFilter();
+    air.type = "bandpass";
+    air.frequency.value = 5200;
+    air.Q.value = 0.8;
+    const hissGain = c.createGain();
+    hissGain.gain.value = 0.35;
+    hiss.connect(air).connect(hissGain).connect(chop);
+
+    [lfo, motor, hiss].forEach(n => {
+      n.start(t);
+      n.stop(t + dur + 0.05);
+    });
+
+    return () => {
+      const now = c.currentTime;
+      out.gain.cancelScheduledValues(now);
+      out.gain.setValueAtTime(Math.max(out.gain.value, 0.0001), now);
+      out.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+    };
+  },
+  done: () => {
+    tone(1568, 0.09, { gain: 0.03 });
+    tone(2093, 0.14, { at: 0.08, gain: 0.025 });
+  },
+  rip: () => {
+    for (let i = 0; i < 12; i++) {
+      noise(0.018 + Math.random() * 0.02, {
+        at: i * 0.02 + Math.random() * 0.01,
+        freq: 2200 + Math.random() * 3000,
+        type: "highpass",
+        gain: 0.25 + Math.random() * 0.3,
+      });
+    }
+  }
+};
+
+/* -------------------------------------------------------------
+ * THERMAL PRINTER INTERACTIVE CONTROLLER
+ * ----------------------------------------------------------- */
+const printerOverlay = $('printerOverlay');
+const closePrinterBtn = $('closePrinterOverlay');
+const soundBtn = $('printerSoundBtn');
+const soundIconOn = $('soundIconOn');
+const soundIconOff = $('soundIconOff');
+const paperStrip = $('paperStrip');
+const paperFlying = $('paperFlying');
+const machinePrintBtn = $('machinePrintBtn');
+const printerLip = $('printerLip');
+const printerLed = $('printerLed');
+const printerHint = $('printerHint');
+
+let printOrder = 428;
+let printerPhase = "idle"; // "idle" | "printing" | "stopped"
+let stopFeedAudio = null;
+let currentFeedAnim = null;
+let stripCount = 0;
+
+function toggleSound() {
+  soundMuted = !soundMuted;
+  if (masterGain) masterGain.gain.value = soundMuted ? 0 : 1;
+  soundBtn.setAttribute('aria-pressed', soundMuted);
+  soundIconOn.style.display = soundMuted ? 'none' : 'block';
+  soundIconOff.style.display = soundMuted ? 'block' : 'none';
+  if (!soundMuted) {
+    sfx.unlock();
+    sfx.button();
+  }
+}
+soundBtn.onclick = toggleSound;
+
+function closePrinter() {
+  if (stopFeedAudio) { stopFeedAudio(); stopFeedAudio = null; }
+  if (currentFeedAnim) { cancelAnimationFrame(currentFeedAnim); currentFeedAnim = null; }
+  printerOverlay.style.display = 'none';
+  printerPhase = "idle";
+  printerLed.classList.remove('is-printing');
+}
+closePrinterBtn.onclick = closePrinter;
+
+printBtn.onclick = () => {
+  sfx.unlock();
+  printerOverlay.style.display = 'grid';
+  printReceipt();
+};
+
+function buildReceiptHTML(orderNum, bill) {
+  const dateStr = new Date().toLocaleString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+  });
+  const consumer = bill ? bill.name : "Consumer";
+  const address = bill ? bill.address : "Green Valley, Sector 4";
+  const meter = bill ? bill.meterNumber : "MTR-8821";
+  const units = bill ? bill.units : 250;
+  const rate = bill && bill.unitRate ? parseFloat(bill.unitRate) : 6.00;
+  const ec = bill ? parseFloat(bill.energyCharge).toFixed(2) : (units * rate).toFixed(2);
+  const fc = bill ? parseFloat(bill.fixedCharge).toFixed(2) : "50.00";
+  const total = bill ? parseFloat(bill.totalAmount).toFixed(2) : (units * rate + 50).toFixed(2);
+
+  const bars = Array.from({ length: 46 }, (_, i) => ((orderNum * (i + 7) * 31 + i * i) % 3) + 1)
+    .map((w, i) => `<span style="width:calc(var(--pu)*${w * 1.4});opacity:${i % 5 === 0 ? 0.85 : 1}"></span>`).join('');
+
+  return `
+    <div class="paper-sheet">
+      <div class="paper-inner">
+        <div class="paper-center">
+          <div class="paper-title">VoltEdge Electricity</div>
+          <div class="paper-sub">${address}</div>
+        </div>
+        <div class="paper-rule"></div>
+        <div class="paper-row"><span>Bill #${String(orderNum).padStart(4, '0')}</span><span>Meter: ${meter}</span></div>
+        <div class="paper-row"><span>Date:</span><span>${dateStr}</span></div>
+        <div class="paper-row"><span>Consumer:</span><span style="max-width:55%;text-align:right" class="truncate">${consumer}</span></div>
+        <div class="paper-rule"></div>
+        <div class="paper-row"><span>${units} kWh @ ₹${rate.toFixed(2)}/unit</span><span>₹${ec}</span></div>
+        <div class="paper-row"><span>Fixed Service Charge</span><span>₹${fc}</span></div>
+        <div class="paper-rule"></div>
+        <div class="paper-row strong"><span>Total Amount</span><span>₹${total}</span></div>
+        <div class="paper-rule"></div>
+        <div class="paper-barcode">${bars}</div>
+        <div class="paper-code">${String(orderNum).padStart(4, '0')} 2026 1113</div>
+        <div class="paper-thanks">THANK YOU</div>
+      </div>
+      <div class="paper-curl"></div>
+    </div>
+  `;
+}
+
+function printReceipt() {
+  if (printerPhase === "printing") {
+    // Stop feed
+    if (stopFeedAudio) { stopFeedAudio(); stopFeedAudio = null; }
+    if (currentFeedAnim) { cancelAnimationFrame(currentFeedAnim); currentFeedAnim = null; }
+    printerPhase = "stopped";
+    printerLed.classList.remove('is-printing');
+    printerHint.textContent = "Pull to tear it off, or print another";
+    return;
+  }
+
+  sfx.unlock();
+  sfx.button();
+  machinePrintBtn.classList.add('is-pressed');
+  setTimeout(() => machinePrintBtn.classList.remove('is-pressed'), 140);
+
+  printOrder++;
+  stripCount++;
+  printerPhase = "printing";
+  printerLed.classList.add('is-printing');
+  printerHint.textContent = "Printing… press print to stop";
+  printerLip.style.display = 'none';
+  paperStrip.style.display = 'block';
+
+  // Create new segment
+  const seg = document.createElement('div');
+  seg.className = 'paper-segment';
+  seg.innerHTML = buildReceiptHTML(printOrder, activeBillData);
+  paperStrip.appendChild(seg);
+
+  // Measure natural height
+  seg.style.height = 'auto';
+  const targetH = seg.offsetHeight;
+  seg.style.height = '0px';
+
+  const duration = 2400; // ms
+  stopFeedAudio = sfx.feed(duration / 1000);
+  const startTime = performance.now();
+
+  function animateFeed(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(1, elapsed / duration);
+    // Ease curve [0.4, 0, 0.9, 1]
+    const p = progress < 0.2 ? progress * 1.5 : progress;
+    const curH = targetH * Math.min(1, p);
+    seg.style.height = curH + 'px';
+
+    if (progress < 1) {
+      currentFeedAnim = requestAnimationFrame(animateFeed);
+    } else {
+      seg.style.height = targetH + 'px';
+      currentFeedAnim = null;
+      stopFeedAudio = null;
+      printerPhase = "stopped";
+      printerLed.classList.remove('is-printing');
+      sfx.done();
+      printerHint.textContent = "Pull to tear it off, or print another";
+    }
+  }
+  currentFeedAnim = requestAnimationFrame(animateFeed);
+}
+
+machinePrintBtn.onclick = printReceipt;
+
+/* Pull to tear logic */
+let dragStart = null;
+let pullX = 0, pullY = 0;
+
+function updatePaperTransform() {
+  paperStrip.style.transform = `translate(${pullX}px, ${pullY}px) rotate(${pullX * 0.04}deg)`;
+}
+
+paperStrip.onpointerdown = (e) => {
+  sfx.unlock();
+  paperStrip.setPointerCapture(e.pointerId);
+  dragStart = { x: e.clientX, y: e.clientY, time: e.timeStamp, lx: e.clientX, ly: e.clientY, vx: 0, vy: 0 };
+};
+
+paperStrip.onpointermove = (e) => {
+  if (!dragStart) return;
+  const dt = Math.max(1, e.timeStamp - dragStart.time);
+  dragStart.vx = ((e.clientX - dragStart.lx) / dt) * 1000;
+  dragStart.vy = ((e.clientY - dragStart.ly) / dt) * 1000;
+  dragStart.lx = e.clientX;
+  dragStart.ly = e.clientY;
+  dragStart.time = e.timeStamp;
+
+  const dx = e.clientX - dragStart.x;
+  const dy = e.clientY - dragStart.y;
+  pullX = dx * 0.3;
+  pullY = Math.min(0, dy) * 0.3;
+  updatePaperTransform();
+
+  if (Math.hypot(dx, Math.min(0, dy)) > 80) {
+    const vx = dragStart.vx || dx * 8;
+    const vy = Math.min(dragStart.vy, -300);
+    dragStart = null;
+    tearPaper(vx, vy);
+  }
+};
+
+function resetPull() {
+  pullX = 0; pullY = 0;
+  paperStrip.style.transition = 'transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+  updatePaperTransform();
+  setTimeout(() => { paperStrip.style.transition = ''; }, 360);
+}
+
+paperStrip.onpointerup = () => { if (dragStart) { dragStart = null; resetPull(); } };
+paperStrip.onpointercancel = () => { if (dragStart) { dragStart = null; resetPull(); } };
+
+paperStrip.onkeydown = (e) => {
+  if (e.key === "Enter" || e.key === " ") {
+    e.preventDefault();
+    tearPaper(0, -900);
+  }
+};
+
+function tearPaper(vx, vy) {
+  if (!paperStrip.children.length) return;
+  if (stopFeedAudio) { stopFeedAudio(); stopFeedAudio = null; }
+  if (currentFeedAnim) { cancelAnimationFrame(currentFeedAnim); currentFeedAnim = null; }
+  sfx.rip();
+
+  paperFlying.innerHTML = paperStrip.innerHTML;
+  paperFlying.style.display = 'block';
+  paperFlying.style.transition = 'none';
+  paperFlying.style.opacity = '1';
+  paperFlying.style.transform = `translate(${pullX}px, ${pullY}px) rotate(${pullX * 0.04}deg)`;
+
+  paperStrip.innerHTML = '';
+  paperStrip.style.display = 'none';
+  printerLip.style.display = 'block';
+  pullX = 0; pullY = 0;
+  updatePaperTransform();
+  printerPhase = "idle";
+  printerLed.classList.remove('is-printing');
+  printerHint.textContent = "Press print";
+
+  requestAnimationFrame(() => {
+    paperFlying.style.transition = 'transform 0.85s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.85s ease-in';
+    const targetX = pullX + vx * 0.55;
+    const targetY = pullY + vy * 0.55 - 140;
+    const targetRot = pullX * 0.04 + vx * 0.03 + (vx >= 0 ? 14 : -14);
+    paperFlying.style.transform = `translate(${targetX}px, ${targetY}px) rotate(${targetRot}deg)`;
+    paperFlying.style.opacity = '0';
+  });
+
+  setTimeout(() => {
+    paperFlying.style.display = 'none';
+  }, 860);
+}
+
+// Download Receipt as PDF
+function downloadReceiptAsPdf() {
+  const bill = activeBillData || {
+    consumerId: "EB-" + String(printOrder || 429),
+    name: "Consumer",
+    address: "Rahimpur rudauli, samastipur, bihar",
+    meterNumber: "12345",
+    units: 11,
+    unitRate: "6.00",
+    energyCharge: "66.00",
+    fixedCharge: "50.00",
+    totalAmount: "116.00"
+  };
+
+  const orderStr = String(printOrder || 429).padStart(4, '0');
+  const dateStr = new Date().toLocaleString("en-GB", {
+    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
+  });
+  const rateVal = bill.unitRate ? parseFloat(bill.unitRate).toFixed(2) : "6.00";
+  const ecVal = bill.energyCharge ? parseFloat(bill.energyCharge).toFixed(2) : (bill.units * parseFloat(rateVal)).toFixed(2);
+  const fcVal = bill.fixedCharge ? parseFloat(bill.fixedCharge).toFixed(2) : "50.00";
+  const totalVal = bill.totalAmount ? parseFloat(bill.totalAmount).toFixed(2) : (parseFloat(ecVal) + parseFloat(fcVal)).toFixed(2);
+
+  const escapePdfText = (t) => String(t || '').replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+
+  const content = [
+    'BT',
+    '/F1 15 Tf',
+    '30 400 Td',
+    '(VOLTEDGE ELECTRICITY) Tj',
+    '/F2 9 Tf',
+    '0 -16 Td',
+    '(' + escapePdfText(bill.address) + ') Tj',
+    '/F2 10 Tf',
+    '0 -18 Td',
+    '(--------------------------------------------------) Tj',
+    '0 -14 Td',
+    '(Bill #: ' + orderStr + '              Meter: ' + escapePdfText(bill.meterNumber) + ') Tj',
+    '0 -14 Td',
+    '(Date: ' + escapePdfText(dateStr) + ') Tj',
+    '0 -14 Td',
+    '(Consumer: ' + escapePdfText(bill.name) + ') Tj',
+    '0 -14 Td',
+    '(--------------------------------------------------) Tj',
+    '0 -14 Td',
+    '(' + bill.units + ' kWh @ Rs.' + rateVal + '/unit:       Rs.' + ecVal + ') Tj',
+    '0 -14 Td',
+    '(Fixed Service Charge:          Rs.' + fcVal + ') Tj',
+    '0 -14 Td',
+    '(--------------------------------------------------) Tj',
+    '/F1 12 Tf',
+    '0 -18 Td',
+    '(Total Amount:                 Rs.' + totalVal + ') Tj',
+    '/F2 10 Tf',
+    '0 -24 Td',
+    '(||| | |||| | ||| || |||| | |||| ||| ||| | |||)',
+    'Tj',
+    '0 -14 Td',
+    '(' + orderStr + ' 2026 1113)',
+    'Tj',
+    '0 -20 Td',
+    '(THANK YOU)',
+    'Tj',
+    'ET'
+  ].join('\n');
+
+  let pdf = '%PDF-1.4\n';
+  const offsets = [];
+  function addObj(str) {
+    offsets.push(pdf.length);
+    pdf += str + '\n';
+  }
+
+  addObj('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj');
+  addObj('2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj');
+  addObj('3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 280 440] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>\nendobj');
+  addObj('4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj');
+  addObj('5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Courier >>\nendobj');
+  addObj('6 0 obj\n<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream\nendobj');
+
+  const startXref = pdf.length;
+  pdf += 'xref\n0 7\n0000000000 65535 f \n';
+  for(let i = 0; i < offsets.length; i++) {
+    pdf += String(offsets[i]).padStart(10, '0') + ' 00000 n \n';
+  }
+  pdf += 'trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n' + startXref + '\n%%EOF';
+
+  const blob = new Blob([pdf], { type: 'application/pdf' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `VoltEdge_Bill_${bill.consumerId || orderStr}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 300);
+}
+
+$('downloadPdfBtn')?.addEventListener('click', downloadReceiptAsPdf);
+
+// Interactive 3D Magnetic Physics for Premium CTA Button
+(function initPremiumCtaTilt() {
+  const btn = document.getElementById('openBillBtn');
+  if (!btn) return;
+  let raf = null;
+
+  btn.addEventListener('mousemove', (e) => {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const rect = btn.getBoundingClientRect();
+    const x = e.clientX - rect.left - rect.width / 2;
+    const y = e.clientY - rect.top - rect.height / 2;
+    const tiltX = (y / (rect.height / 2)) * -5.5;
+    const tiltY = (x / (rect.width / 2)) * 6.5;
+    if (raf) cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      btn.style.transform = `perspective(600px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) scale(1.07) translateY(-1px)`;
+    });
+  });
+
+  btn.addEventListener('mouseleave', () => {
+    if (raf) cancelAnimationFrame(raf);
+    btn.style.transform = '';
+  });
+})();
+</script>
+
+<!-- Liquid Glass Distortion Filter -->
+<svg style="position:absolute;width:0;height:0;pointer-events:none" aria-hidden="true">
+  <defs>
+    <filter id="container-glass" x="0%" y="0%" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="turbulence"/>
+      <feGaussianBlur in="turbulence" stdDeviation="2" result="blurredNoise"/>
+      <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="70" xChannelSelector="R" yChannelSelector="B" result="displaced"/>
+      <feGaussianBlur in="displaced" stdDeviation="4" result="finalBlur"/>
+      <feComposite in="finalBlur" in2="finalBlur" operator="over"/>
+    </filter>
+  </defs>
+</svg>
+</body>
+</html>
